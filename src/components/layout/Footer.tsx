@@ -14,7 +14,7 @@
  *
  * @module components/layout/Footer
  */
-
+import Image from '/images/yaah_logo.jpg';
 import Link from "next/link";
 
 // ─── Link Columns Config ───────────────────────────────────────────────────
@@ -119,24 +119,31 @@ export default function Footer() {
               className="inline-flex items-center gap-3 mb-4 group"
               aria-label="Youth Access Hub home"
             >
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 40 40"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <rect x="4" y="6" width="14" height="28" rx="1" fill="#F5A623" />
-                <rect x="22" y="6" width="14" height="28" rx="1" fill="#2BAE8E" />
-                <circle cx="20" cy="14" r="3" fill="#4A9FD4" />
-                <path
-                  d="M17 20 C17 20 18 18 20 18 C22 18 23 20 23 20 L25 26 M20 18 L18 26"
-                  stroke="#4A9FD4"
-                  strokeWidth="2"
-                  strokeLinecap="round"
+              {/*<svg*/}
+              {/*  width="36"*/}
+              {/*  height="36"*/}
+              {/*  viewBox="0 0 40 40"*/}
+              {/*  fill="none"*/}
+              {/*  xmlns="http://www.w3.org/2000/svg"*/}
+              {/*  aria-hidden="true"*/}
+              {/*>*/}
+                {/*<rect x="4" y="6" width="14" height="28" rx="1" fill="#F5A623" />*/}
+                {/*<rect x="22" y="6" width="14" height="28" rx="1" fill="#2BAE8E" />*/}
+                {/*<circle cx="20" cy="14" r="3" fill="#4A9FD4" />*/}
+                {/*<path*/}
+                {/*  d="M17 20 C17 20 18 18 20 18 C22 18 23 20 23 20 L25 26 M20 18 L18 26"*/}
+                {/*  stroke="#4A9FD4"*/}
+                {/*  strokeWidth="2"*/}
+                {/*  strokeLinecap="round"*/}
+                {/*/>*/}
+                <img
+                    src="/images/yah_logo.png" // Path to your file in the /public folder
+                    alt="Youth Access Hub Logo"
+                    width={40}
+                    height={40}
+                    className="flex-shrink-0 object-contain"
                 />
-              </svg>
+              {/*</svg>*/}
               <span
                 className="text-sm font-bold tracking-wide"
                 style={{ fontFamily: "var(--font-heading)", color: "var(--yah-white)" }}
