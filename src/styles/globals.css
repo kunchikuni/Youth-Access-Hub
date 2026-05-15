@@ -1,0 +1,134 @@
+/*
+ * globals.css — Youth Access Hub
+ *
+ * Tailwind v4 uses a CSS-native config model.
+ * - @import "tailwindcss" replaces the old directives (@tailwind base/components/utilities)
+ * - Design tokens are defined as CSS custom properties and referenced via Tailwind's
+ *   arbitrary value syntax: bg-[var(--yah-navy)]
+ * - No tailwind.config.js required for v4
+ */
+
+@import "tailwindcss";
+
+/* ─── YAH Brand Tokens ────────────────────────────────────────────────── */
+
+:root {
+  /* Colours — extracted from logo */
+  --yah-navy:      #1B2F6B;   /* Primary: wordmark, headings, nav */
+  --yah-orange:    #F5A623;   /* Accent: CTAs, highlights, hover */
+  --yah-teal:      #2BAE8E;   /* Secondary: icons, success, growth */
+  --yah-sky:       #4A9FD4;   /* Tertiary: links, info states */
+  --yah-white:     #FFFFFF;
+  --yah-off-white: #F8F9FC;   /* Alternating section backgrounds */
+  --yah-slate:     #4A5568;   /* Body text on light backgrounds */
+  --yah-light-gray:#E2E8F0;   /* Borders, dividers */
+  --yah-dark:      #0F1E4A;   /* Darkened navy for depth */
+
+  /* Typography */
+  --font-heading: var(--font-poppins), 'Poppins', sans-serif;
+  --font-body:    var(--font-inter), 'Inter', sans-serif;
+
+  /* Transitions */
+  --transition-fast:   150ms ease;
+  --transition-base:   250ms ease;
+  --transition-slow:   400ms ease;
+
+  /* Border radius */
+  --radius-sm:  0.375rem;   /* 6px */
+  --radius-md:  0.625rem;   /* 10px */
+  --radius-lg:  1rem;       /* 16px */
+  --radius-xl:  1.5rem;     /* 24px */
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(27, 47, 107, 0.08);
+  --shadow-hover: 0 8px 32px rgba(27, 47, 107, 0.14);
+  --shadow-orange: 0 4px 20px rgba(245, 166, 35, 0.25);
+}
+
+/* ─── Base Reset & Typography ─────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--yah-slate);
+  background-color: var(--yah-white);
+  line-height: 1.7;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--yah-navy);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ─── Focus Styles (Accessibility) ───────────────────────────────────── */
+
+:focus-visible {
+  outline: 3px solid var(--yah-orange);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Selection ───────────────────────────────────────────────────────── */
+
+::selection {
+  background-color: var(--yah-teal);
+  color: var(--yah-white);
+}
+
+/* ─── Scrollbar (Webkit) ──────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--yah-off-white);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--yah-teal);
+  border-radius: 3px;
+}
+
+/* ─── Utility Classes (non-Tailwind helpers) ──────────────────────────── */
+
+.container-yah {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container-yah {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-yah {
+    padding-inline: 2.5rem;
+  }
+}
