@@ -1,16 +1,52 @@
-import Image from "next/image";
-import Link from "next/link";
-import DonateCard from "./components/DonateCard";
+/**
+ * Home Page — /
+ *
+ * The public-facing homepage for Youth Access Hub.
+ * All data fetching happens here (server component) and is passed
+ * as props into section components — no section fetches its own data.
+ *
+ * Section order:
+ *  1. Hero            — headline, CTAs, visual
+ *  2. StatsBar        — impact numbers
+ *  3. HowItWorks      — 3-step process
+ *  4. ProgramsGrid    — featured mentorship programs
+ *  5. CTABanner       — dual CTA for youth + partners/mentors
+ *
+ * Render strategy: SSG (static site generation at build time).
+ * No dynamic params — revalidate on content change via Sanity webhooks in Phase 2.
+ *
+ * @module app/page
+ */
 
-export default function Home() {
+import type { Metadata } from "next";
+import { getFeaturedPrograms } from "@/lib/getData";
+import Hero from "@/components/sections/Hero";
+import StatsBar from "@/components/sections/StatsBar";
+import HowItWorks from "@/components/sections/HowItWorks";
+import ProgramsGrid from "@/components/sections/ProgramsGrid";
+import CTABanner from "@/components/sections/CTABanner";
+
+// ─── Page Metadata ─────────────────────────────────────────────────────────
+
+export const metadata: Metadata = {
+  title: "Youth Access Hub — Empowering Youth, Opening Opportunities",
+  description:
+    "Youth Access Hub connects young people in Zimbabwe to mentorship programs, career opportunities, internships, and a powerful network of partner organisations.",
+};
+
+// ─── Page Component ────────────────────────────────────────────────────────
+
+export default async function HomePage() {
+  // Fetch featured programs server-side — passed as props to section
+  const featuredPrograms = await getFeaturedPrograms();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans">
-    <main>
-      <h1 className="text-4xl font-bold text-gray-800">Welcome to Youth Access Hub</h1>
-        <Link href="/admin" className="mt-4 text-blue-500 hover:underline">Admin Page</Link>
-      </main>
-      <DonateCard />
-
-    </div>
+    <>
+      <Hero />
+      <StatsBar />
+      <HowItWorks />
+      <ProgramsGrid programs={featuredPrograms} />
+      <CTABanner />
+    </>
   );
 }

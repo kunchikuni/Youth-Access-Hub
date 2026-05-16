@@ -1,33 +1,145 @@
 /**
  * Data abstraction layer
- *
- * ALL data access in the application goes through this file.
- * Components and pages NEVER import from src/data/ directly.
- *
- * Phase 1: Returns static TypeScript data.
- * Phase 2: Replace function bodies with Sanity GROQ queries.
- *          Zero component changes required.
- *
- * All functions are async to ensure the Sanity migration is a drop-in swap.
+ * Phase 2: Supabase backend — all reads go through this module.
+ * Function signatures are identical to Phase 1 — no component changes required.
  *
  * @module lib/getData
  */
 
-import type { Program } from "@/types/program";
+import { createClient } from "@/lib/supabase/server";
+import type { Program, Mentor } from "@/types/program";
 import type { Opportunity } from "@/types/opportunity";
 import type { Partner } from "@/types/partner";
 
-import { programs } from "@/data/programs";
-import { opportunities } from "@/data/opportunities";
-import { partners } from "@/data/partners";
+// ─── Row shapes returned by Supabase ─────────────────────────────────────────
+// Supabase returns snake_case columns — we map to camelCase TypeScript types.
 
-// ─── Programs ────────────────────────────────────────────────────────────────
+interface ProgramRow {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string;
+  description: string;
+  category: Program["category"];
+  status: Program["status"];
+  duration: string;
+  audience: string;
+  outcomes: string[];
+  mentors: Mentor[];
+  featured: boolean;
+  cover_image: string | null;
+  start_date: string | null;
+  partner: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface OpportunityRow {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string;
+  description: string;
+  category: Opportunity["category"];
+  status: Opportunity["status"];
+  provider: string;
+  location: string;
+  audience: string;
+  eligibility: string[];
+  how_to_apply: string;
+  featured: boolean;
+  cover_image: string | null;
+  deadline: string | null;
+  apply_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PartnerRow {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  type: Partner["type"];
+  contribution: string;
+  featured: boolean;
+  logo: string | null;
+  website: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Mappers: DB row → TypeScript type ───────────────────────────────────────
+
+function mapProgram(row: ProgramRow): Program {
+  return {
+    slug: row.slug,
+    title: row.title,
+    tagline: row.tagline,
+    description: row.description,
+    category: row.category,
+    status: row.status,
+    duration: row.duration,
+    audience: row.audience,
+    outcomes: row.outcomes ?? [],
+    mentors: row.mentors ?? [],
+    featured: row.featured,
+    ...(row.cover_image && { photo: row.cover_image }),
+    ...(row.start_date && { startDate: row.start_date }),
+    ...(row.partner && { partner: row.partner }),
+  };
+}
+
+function mapOpportunity(row: OpportunityRow): Opportunity {
+  return {
+    slug: row.slug,
+    title: row.title,
+    tagline: row.tagline,
+    description: row.description,
+    category: row.category,
+    status: row.status,
+    provider: row.provider,
+    location: row.location,
+    audience: row.audience,
+    eligibility: row.eligibility ?? [],
+    howToApply: row.how_to_apply,
+    featured: row.featured,
+    ...(row.deadline && { deadline: row.deadline }),
+    ...(row.apply_url && { applyUrl: row.apply_url }),
+  };
+}
+
+function mapPartner(row: PartnerRow): Partner {
+  return {
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    type: row.type,
+    contribution: row.contribution,
+    featured: row.featured,
+    ...(row.logo && { logo: row.logo }),
+    ...(row.website && { website: row.website }),
+  };
+}
+
+// ─── Programs ─────────────────────────────────────────────────────────────────
 
 /**
  * Returns all programs.
  */
 export async function getPrograms(): Promise<Program[]> {
-  return programs;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("programs")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getData] getPrograms error:", error.message);
+    return [];
+  }
+
+  return (data as ProgramRow[]).map(mapProgram);
 }
 
 /**
@@ -35,7 +147,19 @@ export async function getPrograms(): Promise<Program[]> {
  * Used on the homepage ProgramsGrid section.
  */
 export async function getFeaturedPrograms(): Promise<Program[]> {
-  return programs.filter((p) => p.featured);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("programs")
+      .select("*")
+      .eq("featured", true)
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getData] getFeaturedPrograms error:", error.message);
+    return [];
+  }
+
+  return (data as ProgramRow[]).map(mapProgram);
 }
 
 /**
@@ -45,9 +169,22 @@ export async function getFeaturedPrograms(): Promise<Program[]> {
  * @param slug - URL slug identifier
  */
 export async function getProgramBySlug(
-  slug: string
+    slug: string
 ): Promise<Program | undefined> {
-  return programs.find((p) => p.slug === slug);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("programs")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return undefined; // row not found
+    console.error("[getData] getProgramBySlug error:", error.message);
+    return undefined;
+  }
+
+  return mapProgram(data as ProgramRow);
 }
 
 /**
@@ -55,7 +192,15 @@ export async function getProgramBySlug(
  * Used by Next.js generateStaticParams for /programs/[slug].
  */
 export async function getProgramSlugs(): Promise<string[]> {
-  return programs.map((p) => p.slug);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("programs").select("slug");
+
+  if (error) {
+    console.error("[getData] getProgramSlugs error:", error.message);
+    return [];
+  }
+
+  return data.map((row: { slug: string }) => row.slug);
 }
 
 // ─── Opportunities ────────────────────────────────────────────────────────────
@@ -64,7 +209,18 @@ export async function getProgramSlugs(): Promise<string[]> {
  * Returns all opportunities.
  */
 export async function getOpportunities(): Promise<Opportunity[]> {
-  return opportunities;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("opportunities")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getData] getOpportunities error:", error.message);
+    return [];
+  }
+
+  return (data as OpportunityRow[]).map(mapOpportunity);
 }
 
 /**
@@ -72,7 +228,19 @@ export async function getOpportunities(): Promise<Opportunity[]> {
  * Used on the homepage OpportunitiesGrid section.
  */
 export async function getFeaturedOpportunities(): Promise<Opportunity[]> {
-  return opportunities.filter((o) => o.featured);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("opportunities")
+      .select("*")
+      .eq("featured", true)
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getData] getFeaturedOpportunities error:", error.message);
+    return [];
+  }
+
+  return (data as OpportunityRow[]).map(mapOpportunity);
 }
 
 /**
@@ -82,9 +250,22 @@ export async function getFeaturedOpportunities(): Promise<Opportunity[]> {
  * @param slug - URL slug identifier
  */
 export async function getOpportunityBySlug(
-  slug: string
+    slug: string
 ): Promise<Opportunity | undefined> {
-  return opportunities.find((o) => o.slug === slug);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("opportunities")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return undefined;
+    console.error("[getData] getOpportunityBySlug error:", error.message);
+    return undefined;
+  }
+
+  return mapOpportunity(data as OpportunityRow);
 }
 
 /**
@@ -92,7 +273,15 @@ export async function getOpportunityBySlug(
  * Used by Next.js generateStaticParams for /opportunities/[slug].
  */
 export async function getOpportunitySlugs(): Promise<string[]> {
-  return opportunities.map((o) => o.slug);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("opportunities").select("slug");
+
+  if (error) {
+    console.error("[getData] getOpportunitySlugs error:", error.message);
+    return [];
+  }
+
+  return data.map((row: { slug: string }) => row.slug);
 }
 
 // ─── Partners ─────────────────────────────────────────────────────────────────
@@ -101,14 +290,37 @@ export async function getOpportunitySlugs(): Promise<string[]> {
  * Returns all partners.
  */
 export async function getPartners(): Promise<Partner[]> {
-  return partners;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("partners")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getData] getPartners error:", error.message);
+    return [];
+  }
+
+  return (data as PartnerRow[]).map(mapPartner);
 }
 
 /**
  * Returns only partners marked as featured.
  */
 export async function getFeaturedPartners(): Promise<Partner[]> {
-  return partners.filter((p) => p.featured);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("partners")
+      .select("*")
+      .eq("featured", true)
+      .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getData] getFeaturedPartners error:", error.message);
+    return [];
+  }
+
+  return (data as PartnerRow[]).map(mapPartner);
 }
 
 /**
@@ -118,7 +330,20 @@ export async function getFeaturedPartners(): Promise<Partner[]> {
  * @param slug - URL slug identifier
  */
 export async function getPartnerBySlug(
-  slug: string
+    slug: string
 ): Promise<Partner | undefined> {
-  return partners.find((p) => p.slug === slug);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+      .from("partners")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return undefined;
+    console.error("[getData] getPartnerBySlug error:", error.message);
+    return undefined;
+  }
+
+  return mapPartner(data as PartnerRow);
 }
