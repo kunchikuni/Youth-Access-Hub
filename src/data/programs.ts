@@ -27,9 +27,9 @@ export const programs: Program[] = [
     ],
     mentors: [
       {
-        name: "Dr. Tendai Moyo",
+        name: "Patience Chita",
         title: "Senior Economist",
-        organisation: "Ministry of Finance",
+        organisation: "Delte Beverages",
         bio: "15 years in public finance and economic policy. Passionate about youth economic inclusion and financial literacy.",
       },
       {

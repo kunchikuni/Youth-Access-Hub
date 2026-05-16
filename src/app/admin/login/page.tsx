@@ -12,8 +12,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "src/lib/supabase/client";
-import Button from "src/components/ui/Button";
+import { createClient } from "@/lib/supabase/client";
+import Button from "@/components/ui/Button";
 
 export default function AdminLoginPage() {
     const router = useRouter();
