@@ -13,12 +13,13 @@
  *
  * @module components/admin/OpportunitiesTable
  */
-
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Opportunity } from "@/types/opportunity";
+import { revalidatePublicPages, OPPORTUNITY_PATHS } from "@/lib/revalidate";
+
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -67,6 +68,11 @@ export default function OpportunitiesTable({ opportunities: initial }: Opportuni
       setOpportunities((prev) =>
         prev.map((o) => (o.slug === opp.slug ? { ...o, status: newStatus } : o))
       );
+      await revalidatePublicPages([
+        OPPORTUNITY_PATHS.list,
+        OPPORTUNITY_PATHS.detail(opp.slug),
+        OPPORTUNITY_PATHS.home,
+      ]);
     }
     setLoadingSlug(null);
   }
@@ -85,6 +91,11 @@ export default function OpportunitiesTable({ opportunities: initial }: Opportuni
       setOpportunities((prev) => prev.filter((o) => o.slug !== slug));
       setDeleteSlug(null);
       setLoadingSlug(null);
+      await revalidatePublicPages([
+          OPPORTUNITY_PATHS.list,
+          OPPORTUNITY_PATHS.detail(slug),
+          OPPORTUNITY_PATHS.home,
+      ]);
       router.refresh();
     }
   }

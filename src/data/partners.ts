@@ -10,13 +10,13 @@ import type { Partner } from "@/types/partner";
 
 export const partners: Partner[] = [
   {
-    slug: "zimbabwe-youth-council",
-    name: "Zimbabwe Youth Council",
-    description: "National youth development body supporting youth empowerment programs across Zimbabwe.",
-    type: "government",
+    slug: "cyaen-incorporated",
+    name: "Cyaen Global",
+    description: "National youth development body supporting youth empowerment in tech programs across Zimbabwe.",
+    type: "corporate",
     contribution: "Access to national youth networks, co-facilitation of leadership programs, and policy alignment support.",
     featured: true,
-    website: "https://www.zyc.org.zw",
+    website: "https://www.cyaen.co.zw",
   },
   {
     slug: "econet-wireless",

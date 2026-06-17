@@ -12,6 +12,8 @@ import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import CTABanner from "@/components/sections/CTABanner";
 import { formatDate } from "@/lib/utils";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Opportunities",
   description: "Explore internships, funding, scholarships, training and volunteering opportunities available through Youth Access Hub.",

@@ -21,6 +21,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Opportunity, OpportunityCategory, OpportunityStatus } from "@/types/opportunity";
+import { revalidatePublicPages, OPPORTUNITY_PATHS } from "@/lib/revalidate";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -243,6 +244,20 @@ export default function OpportunityForm({ opportunity }: OpportunityFormProps) {
         setSaving(false);
         return;
       }
+    }
+    // Revalidate all affected public pages so content appears immediately
+    if (isEdit) {
+      await revalidatePublicPages([
+        OPPORTUNITY_PATHS.list,
+        OPPORTUNITY_PATHS.detail(opportunity!.slug),
+        OPPORTUNITY_PATHS.home,
+      ]);
+    } else {
+      await revalidatePublicPages([
+        OPPORTUNITY_PATHS.list,
+        OPPORTUNITY_PATHS.detail(slug.trim()),
+        OPPORTUNITY_PATHS.home,
+      ]);
     }
 
     router.push("/admin/opportunities");

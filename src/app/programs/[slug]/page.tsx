@@ -11,6 +11,8 @@ import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import Button, { ArrowIcon } from "@/components/ui/Button";
 import CTABanner from "@/components/sections/CTABanner";
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   const slugs = await getProgramSlugs();
   return slugs.map((slug) => ({ slug }));

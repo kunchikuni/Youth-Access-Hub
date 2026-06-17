@@ -11,6 +11,8 @@ import Card, { CardHeader, CardBody, CardFooter, CardIcon } from "@/components/u
 import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import CTABanner from "@/components/sections/CTABanner";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Mentorship Programs",
   description: "Explore Youth Access Hub's mentorship programs connecting young people with experienced professionals across Zimbabwe.",

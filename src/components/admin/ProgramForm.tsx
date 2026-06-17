@@ -21,6 +21,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Program, Mentor, ProgramCategory, ProgramStatus } from "@/types/program";
+import { revalidatePublicPages, PROGRAM_PATHS } from "@/lib/revalidate";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -269,6 +270,19 @@ export default function ProgramForm({ program }: ProgramFormProps) {
         setSaving(false);
         return;
       }
+    }
+    if (isEdit) {
+      await revalidatePublicPages([
+        PROGRAM_PATHS.list,
+        PROGRAM_PATHS.detail(program!.slug),
+        PROGRAM_PATHS.home,
+      ]);
+    } else {
+      await revalidatePublicPages([
+        PROGRAM_PATHS.list,
+        PROGRAM_PATHS.detail(slug.trim()),
+        PROGRAM_PATHS.home,
+      ]);
     }
 
     router.push("/admin/programs");

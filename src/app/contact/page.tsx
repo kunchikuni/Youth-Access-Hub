@@ -37,7 +37,7 @@ export default function ContactPage() {
             <path d="M0,50 C480,10 960,50 1440,20 L1440,50 Z" />
           </svg>
         </div>
-      </section>
+      </section>0
 
       {/* Main content */}
       <section style={{ backgroundColor: "var(--yah-off-white)" }}>

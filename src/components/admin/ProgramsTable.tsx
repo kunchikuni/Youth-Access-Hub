@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Program } from "@/types/program";
+import { revalidatePublicPages, PROGRAM_PATHS } from "@/lib/revalidate";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -73,6 +74,13 @@ export default function ProgramsTable({ programs: initial }: ProgramsTableProps)
           p.slug === program.slug ? { ...p, status: newStatus } : p
         )
       );
+
+      // Revalidate so the status change is reflected on the public site
+      await revalidatePublicPages([
+        PROGRAM_PATHS.list,
+        PROGRAM_PATHS.detail(program.slug),
+        PROGRAM_PATHS.home,
+      ]);
     }
     setLoadingSlug(null);
   }
@@ -95,6 +103,12 @@ export default function ProgramsTable({ programs: initial }: ProgramsTableProps)
       setPrograms((prev) => prev.filter((p) => p.slug !== slug));
       setDeleteSlug(null);
       setLoadingSlug(null);
+      // Revalidate so deleted program disappears from the public site
+      await revalidatePublicPages([
+        PROGRAM_PATHS.list,
+        PROGRAM_PATHS.detail(slug),
+        PROGRAM_PATHS.home,
+      ]);
       router.refresh();
     }
   }
