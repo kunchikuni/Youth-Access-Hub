@@ -52,6 +52,8 @@ export interface Program {
   mentors: Mentor[];
   /** Whether to feature on the homepage */
   featured: boolean;
+  /** Public URL of the cover image (from Supabase Storage) */
+  coverImageUrl?: string | null;
   /** ISO date string of program start */
   startDate?: string;
   /** Partner organisation providing the program */

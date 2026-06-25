@@ -177,7 +177,7 @@ export default function AdminLoginPage() {
                         This portal is restricted to authorised YAH executives.
                         <br />
                         Not an executive?{" "}
-                        <a href="/public" className="login-back-link">
+                        <a href="/" className="login-back-link">
                             Return to website
                         </a>
                     </p>
