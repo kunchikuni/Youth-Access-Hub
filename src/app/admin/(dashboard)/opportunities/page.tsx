@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import OpportunitiesTable from "@/components/admin/OpportunitiesTable";
 import type { Opportunity } from "@/types/opportunity";
 
-export const metadata = { title: "Opportunities â€” YAH Admin" };
+export const metadata = { title: "Opportunities | YAH Admin" };
 
 export default async function AdminOpportunitiesPage() {
   const supabase = await createClient();

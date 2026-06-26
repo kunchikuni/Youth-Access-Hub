@@ -1,5 +1,5 @@
 /**
- * Opportunities Page â€” /opportunities
+ * Opportunities Page ” /opportunities
  * @module app/opportunities/page
  */
 import type { Metadata } from "next";
@@ -76,7 +76,7 @@ export default async function OpportunitiesPage() {
                   </CardBody>
                   <CardFooter bordered className="flex items-center justify-between">
                     <span className="text-xs font-semibold" style={{ color: "var(--yah-slate)", fontFamily: "var(--font-heading)" }}>{opp.audience.split(" ").slice(0, 3).join(" ")}</span>
-                    <span className="text-xs font-semibold" style={{ color: "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>View Details â†’</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>View Details </span>
                   </CardFooter>
                 </Card>
               </Link>
