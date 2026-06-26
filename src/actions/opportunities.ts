@@ -16,6 +16,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/auditLog";
 import type { Opportunity } from "@/types/opportunity";
 
 // ─── Result type ──────────────────────────────────────────────────────────────
@@ -65,10 +66,10 @@ export interface OpportunityPayload {
 // ─── Create ───────────────────────────────────────────────────────────────────
 
 export async function createOpportunity(
-  payload: OpportunityPayload
+    payload: OpportunityPayload
 ): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
 
     const { error } = await supabase.from("opportunities").insert({
       slug:         payload.slug,
@@ -92,13 +93,24 @@ export async function createOpportunity(
       return {
         success: false,
         error:
-          error.code === "23505"
-            ? "An opportunity with this slug already exists. Change the title or edit the slug manually."
-            : error.message,
+            error.code === "23505"
+                ? "An opportunity with this slug already exists. Change the title or edit the slug manually."
+                : error.message,
       };
     }
 
     revalidateOpportunityPaths(payload.slug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "create",
+      entityType: "opportunity",
+      entitySlug: payload.slug,
+      entityTitle: payload.title,
+    });
+
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };
@@ -108,35 +120,46 @@ export async function createOpportunity(
 // ─── Update ───────────────────────────────────────────────────────────────────
 
 export async function updateOpportunity(
-  originalSlug: string,
-  payload: OpportunityPayload
+    originalSlug: string,
+    payload: OpportunityPayload
 ): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
 
     const { error } = await supabase
-      .from("opportunities")
-      .update({
-        title:        payload.title,
-        tagline:      payload.tagline,
-        description:  payload.description,
-        category:     payload.category,
-        status:       payload.status,
-        provider:     payload.provider,
-        location:     payload.location,
-        audience:     payload.audience,
-        eligibility:  payload.eligibility,
-        how_to_apply: payload.howToApply,
-        featured:     payload.featured,
-        cover_image:  payload.coverImageUrl,
-        deadline:     payload.deadline  ?? null,
-        apply_url:    payload.applyUrl  ?? null,
-      })
-      .eq("slug", originalSlug);
+        .from("opportunities")
+        .update({
+          title:        payload.title,
+          tagline:      payload.tagline,
+          description:  payload.description,
+          category:     payload.category,
+          status:       payload.status,
+          provider:     payload.provider,
+          location:     payload.location,
+          audience:     payload.audience,
+          eligibility:  payload.eligibility,
+          how_to_apply: payload.howToApply,
+          featured:     payload.featured,
+          cover_image:  payload.coverImageUrl,
+          deadline:     payload.deadline  ?? null,
+          apply_url:    payload.applyUrl  ?? null,
+        })
+        .eq("slug", originalSlug);
 
     if (error) return { success: false, error: error.message };
 
     revalidateOpportunityPaths(originalSlug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "update",
+      entityType: "opportunity",
+      entitySlug: originalSlug,
+      entityTitle: payload.title,
+    });
+
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };
@@ -146,23 +169,34 @@ export async function updateOpportunity(
 // ─── Toggle status ────────────────────────────────────────────────────────────
 
 export async function toggleOpportunityStatus(
-  slug: string,
-  currentStatus: Opportunity["status"]
+    slug: string,
+    currentStatus: Opportunity["status"]
 ): Promise<ActionResult & { newStatus?: Opportunity["status"] }> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
 
     const newStatus: Opportunity["status"] =
-      currentStatus === "open" ? "closed" : "open";
+        currentStatus === "open" ? "closed" : "open";
 
     const { error } = await supabase
-      .from("opportunities")
-      .update({ status: newStatus })
-      .eq("slug", slug);
+        .from("opportunities")
+        .update({ status: newStatus })
+        .eq("slug", slug);
 
     if (error) return { success: false, error: error.message };
 
     revalidateOpportunityPaths(slug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "status_toggle",
+      entityType: "opportunity",
+      entitySlug: slug,
+      changes: { from: currentStatus, to: newStatus },
+    });
+
     return { success: true, newStatus };
   } catch (err) {
     return { success: false, error: (err as Error).message };
@@ -173,16 +207,35 @@ export async function toggleOpportunityStatus(
 
 export async function deleteOpportunity(slug: string): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
+
+    // Fetch title before deleting, so the audit log has a readable
+    // record even after the row itself is gone.
+    const { data: existing } = await supabase
+        .from("opportunities")
+        .select("title")
+        .eq("slug", slug)
+        .single();
 
     const { error } = await supabase
-      .from("opportunities")
-      .delete()
-      .eq("slug", slug);
+        .from("opportunities")
+        .delete()
+        .eq("slug", slug);
 
     if (error) return { success: false, error: error.message };
 
     revalidateOpportunityPaths(slug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "delete",
+      entityType: "opportunity",
+      entitySlug: slug,
+      entityTitle: existing?.title,
+    });
+
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };

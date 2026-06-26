@@ -16,6 +16,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEntry } from "@/lib/auditLog";
 import type { Program, Mentor } from "@/types/program";
 
 // ─── Result type ──────────────────────────────────────────────────────────────
@@ -64,10 +65,10 @@ export interface ProgramPayload {
 // ─── Create ───────────────────────────────────────────────────────────────────
 
 export async function createProgram(
-  payload: ProgramPayload
+    payload: ProgramPayload
 ): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
 
     const { error } = await supabase.from("programs").insert({
       slug:        payload.slug,
@@ -90,13 +91,24 @@ export async function createProgram(
       return {
         success: false,
         error:
-          error.code === "23505"
-            ? "A program with this slug already exists. Change the title or edit the slug manually."
-            : error.message,
+            error.code === "23505"
+                ? "A program with this slug already exists. Change the title or edit the slug manually."
+                : error.message,
       };
     }
 
     revalidateProgramPaths(payload.slug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "create",
+      entityType: "program",
+      entitySlug: payload.slug,
+      entityTitle: payload.title,
+    });
+
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };
@@ -106,34 +118,45 @@ export async function createProgram(
 // ─── Update ───────────────────────────────────────────────────────────────────
 
 export async function updateProgram(
-  originalSlug: string,
-  payload: ProgramPayload
+    originalSlug: string,
+    payload: ProgramPayload
 ): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
 
     const { error } = await supabase
-      .from("programs")
-      .update({
-        title:       payload.title,
-        tagline:     payload.tagline,
-        description: payload.description,
-        category:    payload.category,
-        status:      payload.status,
-        duration:    payload.duration,
-        audience:    payload.audience,
-        outcomes:    payload.outcomes,
-        mentors:     payload.mentors,
-        featured:    payload.featured,
-        cover_image: payload.coverImageUrl,
-        start_date:  payload.startDate ?? null,
-        partner:     payload.partner   ?? null,
-      })
-      .eq("slug", originalSlug);
+        .from("programs")
+        .update({
+          title:       payload.title,
+          tagline:     payload.tagline,
+          description: payload.description,
+          category:    payload.category,
+          status:      payload.status,
+          duration:    payload.duration,
+          audience:    payload.audience,
+          outcomes:    payload.outcomes,
+          mentors:     payload.mentors,
+          featured:    payload.featured,
+          cover_image: payload.coverImageUrl,
+          start_date:  payload.startDate ?? null,
+          partner:     payload.partner   ?? null,
+        })
+        .eq("slug", originalSlug);
 
     if (error) return { success: false, error: error.message };
 
     revalidateProgramPaths(originalSlug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "update",
+      entityType: "program",
+      entitySlug: originalSlug,
+      entityTitle: payload.title,
+    });
+
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };
@@ -143,23 +166,34 @@ export async function updateProgram(
 // ─── Toggle status ────────────────────────────────────────────────────────────
 
 export async function toggleProgramStatus(
-  slug: string,
-  currentStatus: Program["status"]
+    slug: string,
+    currentStatus: Program["status"]
 ): Promise<ActionResult & { newStatus?: Program["status"] }> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
 
     const newStatus: Program["status"] =
-      currentStatus === "open" ? "closed" : "open";
+        currentStatus === "open" ? "closed" : "open";
 
     const { error } = await supabase
-      .from("programs")
-      .update({ status: newStatus })
-      .eq("slug", slug);
+        .from("programs")
+        .update({ status: newStatus })
+        .eq("slug", slug);
 
     if (error) return { success: false, error: error.message };
 
     revalidateProgramPaths(slug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "status_toggle",
+      entityType: "program",
+      entitySlug: slug,
+      changes: { from: currentStatus, to: newStatus },
+    });
+
     return { success: true, newStatus };
   } catch (err) {
     return { success: false, error: (err as Error).message };
@@ -170,16 +204,35 @@ export async function toggleProgramStatus(
 
 export async function deleteProgram(slug: string): Promise<ActionResult> {
   try {
-    const { supabase } = await requireAuth();
+    const { supabase, user } = await requireAuth();
+
+    // Fetch title before deleting, so the audit log has a readable
+    // record even after the row itself is gone.
+    const { data: existing } = await supabase
+        .from("programs")
+        .select("title")
+        .eq("slug", slug)
+        .single();
 
     const { error } = await supabase
-      .from("programs")
-      .delete()
-      .eq("slug", slug);
+        .from("programs")
+        .delete()
+        .eq("slug", slug);
 
     if (error) return { success: false, error: error.message };
 
     revalidateProgramPaths(slug);
+
+    await logAuditEntry({
+      supabase,
+      userId: user.id,
+      userEmail: user.email,
+      action: "delete",
+      entityType: "program",
+      entitySlug: slug,
+      entityTitle: existing?.title,
+    });
+
     return { success: true };
   } catch (err) {
     return { success: false, error: (err as Error).message };

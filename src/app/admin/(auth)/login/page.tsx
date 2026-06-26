@@ -10,25 +10,53 @@
  * @module app/admin/login/page
  */
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { checkLockout, recordLoginAttempt } from "@/actions/auth";
 import Button from "@/components/ui/Button";
 
 export default function AdminLoginPage() {
+  return (
+      <Suspense fallback={<LoginPageFallback />}>
+        <AdminLoginForm />
+      </Suspense>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+      <div className="login-root">
+        <div className="login-brand" />
+        <div className="login-form-panel" />
+        <style>{`
+        .login-root { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+        .login-brand { background-color: var(--yah-navy); }
+        .login-form-panel { background-color: var(--yah-off-white); }
+        @media (max-width: 768px) { .login-root { grid-template-columns: 1fr; } }
+      `}</style>
+      </div>
+  );
+}
+
+function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
+  const [idleMessage, setIdleMessage] = useState(
+    searchParams.get("reason") === "idle"
+  );
 
   function formatUnlockTime(date: Date): string {
     const minutesLeft = Math.ceil((date.getTime() - Date.now()) / 60000);
     return minutesLeft <= 1
-      ? "less than a minute"
-      : `about ${minutesLeft} minutes`;
+        ? "less than a minute"
+        : `about ${minutesLeft} minutes`;
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -43,7 +71,7 @@ export default function AdminLoginPage() {
       const unlockDate = new Date(lockout.unlockAt);
       setLockedUntil(unlockDate);
       setError(
-        `Too many failed attempts. Please try again in ${formatUnlockTime(unlockDate)}.`
+          `Too many failed attempts. Please try again in ${formatUnlockTime(unlockDate)}.`
       );
       setLoading(false);
       return;
@@ -61,9 +89,9 @@ export default function AdminLoginPage() {
     if (signInError) {
       const remaining = lockout.attemptsRemaining - 1;
       setError(
-        remaining > 0
-          ? `Invalid email or password. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining before temporary lockout.`
-          : "Invalid email or password. Your account will be temporarily locked after this attempt."
+          remaining > 0
+              ? `Invalid email or password. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining before temporary lockout.`
+              : "Invalid email or password. Your account will be temporarily locked after this attempt."
       );
       setLoading(false);
       return;
@@ -74,149 +102,160 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="login-root">
+      <div className="login-root">
 
-      {/* ── Left panel — brand ── */}
-      <div className="login-brand">
-        <div className="login-brand-inner">
+        {/* ── Left panel — brand ── */}
+        <div className="login-brand">
+          <div className="login-brand-inner">
 
-          <div className="login-logo-mark" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <circle cx="24" cy="24" r="24" fill="var(--yah-orange)" opacity="0.15" />
-              <circle cx="24" cy="24" r="16" fill="var(--yah-orange)" opacity="0.25" />
-              <circle cx="24" cy="24" r="8"  fill="var(--yah-orange)" />
-            </svg>
-          </div>
+            <div className="login-logo-mark" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="24" fill="var(--yah-orange)" opacity="0.15" />
+                <circle cx="24" cy="24" r="16" fill="var(--yah-orange)" opacity="0.25" />
+                <circle cx="24" cy="24" r="8"  fill="var(--yah-orange)" />
+              </svg>
+            </div>
 
-          <h1 className="login-brand-name">Youth Access Hub</h1>
-          <p className="login-brand-tagline">Empowering Youth, Opening Opportunities</p>
+            <h1 className="login-brand-name">Youth Access Hub</h1>
+            <p className="login-brand-tagline">Empowering Youth, Opening Opportunities</p>
 
-          <div className="login-brand-divider" aria-hidden="true" />
+            <div className="login-brand-divider" aria-hidden="true" />
 
-          <p className="login-brand-desc">
-            Executive portal — manage programs, opportunities, and content
-            published to the YAH website.
-          </p>
+            <p className="login-brand-desc">
+              Executive portal — manage programs, opportunities, and content
+              published to the YAH website.
+            </p>
 
-          <div className="login-grid-deco" aria-hidden="true">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <div key={i} className="login-grid-dot" />
-            ))}
+            <div className="login-grid-deco" aria-hidden="true">
+              {Array.from({ length: 30 }).map((_, i) => (
+                  <div key={i} className="login-grid-dot" />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Right panel — form ── */}
-      <div className="login-form-panel">
-        <div className="login-form-card">
+        {/* ── Right panel — form ── */}
+        <div className="login-form-panel">
+          <div className="login-form-card">
 
-          <div className="login-form-header">
-            <div className="login-badge">Executive Access</div>
-            <h2 className="login-title">Sign in to your account</h2>
-            <p className="login-subtitle">
-              Authorised YAH executives only. Contact your administrator if
-              you need access.
-            </p>
-          </div>
+            <div className="login-form-header">
+              <div className="login-badge">Executive Access</div>
+              <h2 className="login-title">Sign in to your account</h2>
+              <p className="login-subtitle">
+                Authorised YAH executives only. Contact your administrator if
+                you need access.
+              </p>
+            </div>
 
-          <form onSubmit={handleLogin} className="login-form" noValidate>
+            <form onSubmit={handleLogin} className="login-form" noValidate>
 
-            {/* Email */}
-            <div className="login-field">
-              <label htmlFor="email" className="login-label">
-                Email address
-              </label>
-              <div className="login-input-wrap">
+              {/* Email */}
+              <div className="login-field">
+                <label htmlFor="email" className="login-label">
+                  Email address
+                </label>
+                <div className="login-input-wrap">
                 <span className="login-input-icon" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="login-input"
-                  placeholder="you@example.com"
-                />
+                  <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="login-input"
+                      placeholder="you@example.com"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="login-field">
-              <label htmlFor="password" className="login-label">
-                Password
-              </label>
-              <div className="login-input-wrap">
+              {/* Password */}
+              <div className="login-field">
+                <label htmlFor="password" className="login-label">
+                  Password
+                </label>
+                <div className="login-input-wrap">
                 <span className="login-input-icon" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="login-input"
-                  placeholder="••••••••"
-                />
+                  <input
+                      id="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="login-input"
+                      placeholder="••••••••"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Error */}
-            {error && (
-              <div className="login-error" role="alert">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
-                  <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span>{error}</span>
-              </div>
-            )}
+              {/* Idle session notice */}
+              {idleMessage && !error && (
+                  <div className="login-idle-notice" role="status">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
+                      <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>You were signed out due to inactivity. Please sign in again.</span>
+                  </div>
+              )}
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              variant="secondary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              disabled={loading || !!lockedUntil}
-              trailingIcon={
-                !loading && !lockedUntil ? (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) : undefined
-              }
-            >
-              {loading ? "Signing in…" : lockedUntil ? "Temporarily locked" : "Sign in"}
-            </Button>
+              {/* Error */}
+              {error && (
+                  <div className="login-error" role="alert">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
+                      <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+              )}
 
-          </form>
+              {/* Submit */}
+              <Button
+                  type="submit"
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  loading={loading}
+                  disabled={loading || !!lockedUntil}
+                  trailingIcon={
+                    !loading && !lockedUntil ? (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    ) : undefined
+                  }
+              >
+                {loading ? "Signing in…" : lockedUntil ? "Temporarily locked" : "Sign in"}
+              </Button>
 
-          <p className="login-footer-note">
-            This portal is restricted to authorised YAH executives.
-            <br />
-            Not an executive?{" "}
-            <a href="/" className="login-back-link">
-              Return to website
-            </a>
-          </p>
+            </form>
 
+            <p className="login-footer-note">
+              This portal is restricted to authorised YAH executives.
+              <br />
+              Not an executive?{" "}
+              <Link href="/" className="login-back-link">
+                Return to website
+              </Link>
+            </p>
+
+          </div>
         </div>
-      </div>
 
-      <style>{`
+        <style>{`
         .login-root {
           min-height: 100vh;
           display: grid;
@@ -419,6 +458,19 @@ export default function AdminLoginPage() {
           font-weight: 500;
         }
 
+        .login-idle-notice {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem 1rem;
+          background: rgba(74, 159, 212, 0.08);
+          border: 1px solid rgba(74, 159, 212, 0.25);
+          border-radius: var(--radius-md);
+          color: var(--yah-sky);
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
         .login-footer-note {
           margin-top: 1.5rem;
           font-size: 0.8125rem;
@@ -467,6 +519,6 @@ export default function AdminLoginPage() {
           }
         }
       `}</style>
-    </div>
+      </div>
   );
 }
