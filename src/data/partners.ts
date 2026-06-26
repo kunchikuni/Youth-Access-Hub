@@ -36,29 +36,4 @@ export const partners: Partner[] = [
     featured: true,
     website: "https://www.techzim.co.zw",
   },
-  {
-    slug: "university-of-zimbabwe",
-    name: "University of Zimbabwe",
-    description: "Zimbabwe's oldest and largest university, partnering to connect students to YAH's network.",
-    type: "university",
-    contribution: "Campus access points, student referrals, and co-hosting of career readiness workshops.",
-    featured: true,
-    website: "https://www.uz.ac.zw",
-  },
-  {
-    slug: "kurera-ventures",
-    name: "Kurera Ventures",
-    description: "Early-stage startup studio and ecosystem builder focused on Zimbabwe and the region.",
-    type: "corporate",
-    contribution: "Entrepreneurship mentors, pitch coaching, and connections to startup funding opportunities.",
-    featured: false,
-  },
-  {
-    slug: "harare-city-youth-department",
-    name: "Harare City Youth Department",
-    description: "Municipal government department responsible for youth services in Harare.",
-    type: "government",
-    contribution: "Community access points, venue support, and co-referral for youth support services.",
-    featured: false,
-  },
-];
+ ]

@@ -1,7 +1,7 @@
 # Youth Access Hub — Architecture Document
 
 > **Living document.** Update this file whenever structural or technological changes occur.
-> Last updated: 2026-06-19 | Phase: 6 — Supabase Backend & Admin Dashboard
+> Last updated: 2026-06-26 | Phase: 7 — Admin Security Hardening
 
 ---
 
@@ -73,6 +73,9 @@ youth-access-hub/
 │   │       ├── (auth)/
 │   │       │   └── login/
 │   │       │       └── page.tsx            # NO auth guard — must stay outside (dashboard)
+│   │       │                                # Wrapped in <Suspense> internally: useSearchParams()
+│   │       │                                # (used for the idle-timeout message) requires it,
+│   │       │                                # or the production build fails.
 │   │       └── (dashboard)/
 │   │           ├── layout.tsx              # Auth guard + AdminShell
 │   │           ├── loading.tsx
@@ -89,8 +92,9 @@ youth-access-hub/
 │   │               └── [slug]/page.tsx
 │   │
 │   ├── actions/                            # Server Actions — all DB writes live here
-│   │   ├── programs.ts                     # create/update/delete/toggleStatus
-│   │   └── opportunities.ts                # create/update/delete/toggleStatus
+│   │   ├── programs.ts                     # create/update/delete/toggleStatus + audit logging
+│   │   ├── opportunities.ts                # create/update/delete/toggleStatus + audit logging
+│   │   └── auth.ts                         # checkLockout / recordLoginAttempt
 │   │
 │   ├── components/
 │   │   ├── layout/
@@ -112,7 +116,8 @@ youth-access-hub/
 │   │   ├── supabase/
 │   │   │   ├── server.ts                   # Server Component / Server Action client
 │   │   │   └── client.ts                   # Client Component client (browser)
-│   │   └── utils.ts
+│   │   ├── utils.ts
+│   │   └── auditLog.ts                     # logAuditEntry() — writes to audit_log table
 │   │
 │   ├── types/
 │   │   ├── program.ts
@@ -123,9 +128,12 @@ youth-access-hub/
 │       └── globals.css
 │
 ├── supabase/
-│   └── schema.sql                          # Full DB schema, RLS policies, storage bucket, seed data
+│   ├── schema.sql                          # Full DB schema, RLS policies, storage bucket, seed data
+│   └── security/
+│       └── schema-additions.sql            # login_attempts + audit_log tables, see §12.2 / §12.4
 │
 ├── middleware.ts                           # Session refresh + /admin route protection
+├── next.config.ts                          # Security headers (CSP, HSTS, etc.) — see §12.5
 ├── ARCHITECTURE.md
 ├── AGENTS.md
 └── CLAUDE.md
@@ -315,14 +323,95 @@ app/admin/(dashboard)/layout.tsx
 
 ## 12. Security
 
-- Row Level Security (RLS) enabled on all three tables — public read access, authenticated-only write access. See `supabase/schema.sql`.
+This section covers the full set of security controls in the application, including the hardening pass completed after the initial admin dashboard build (branch: `feat/admin-security-hardening`).
+
+### 12.1 Authentication & session management
+
+- Row Level Security (RLS) enabled on `programs`, `opportunities`, `partners` — public read access, authenticated-only write access. See `supabase/schema.sql`.
 - Server Actions double as the authorization boundary — each calls `requireAuth()` before touching the database, independent of RLS.
 - Middleware (`middleware.ts`) protects all `/admin/*` routes except `/admin/login`, redirecting unauthenticated requests.
 - `(dashboard)/layout.tsx` re-verifies the session server-side as a second guard layer.
 - No secrets are exposed to the browser. The Supabase anon key is public by design (protected by RLS); the service role key is never used in this codebase.
 - Storage bucket `yah-media` is public-read (required for `<img>` tags on the public site) but write-protected to authenticated users only.
-- Contact form: server-side validation in `api/contact/route.ts`, rate limiting via Vercel Edge Config (Phase 2, still planned)
-- `.env.local` never committed — `.env.example` documents required keys
+- `.env.local` never committed — `.env.example` documents required keys.
+
+### 12.2 Login lockout
+
+- `src/actions/auth.ts` exports `checkLockout()` and `recordLoginAttempt()`.
+- Tracked in a dedicated `login_attempts` table (see `supabase/security/schema-additions.sql`) — email, timestamp, success flag.
+- **Threshold:** 5 failed attempts within a 15-minute rolling window locks that email out for 15 minutes from the most recent failure.
+- Lockout is checked **before** Supabase Auth is contacted at all — a locked-out attempt never reaches `signInWithPassword()`, so it cannot itself be used to keep probing.
+- Lockout is per-email, not per-IP. This was a deliberate scope decision: it stops credential-stuffing against one specific account without needing IP-based infrastructure, which Vercel's serverless model makes harder to reason about reliably.
+- RLS on `login_attempts` permits anonymous insert/select, because lockout checks happen before any session exists. The data stored there (email + timestamp + success) is low-sensitivity by design.
+- The login page (`(auth)/login/page.tsx`) shows the user how many attempts remain, and a clear "try again in N minutes" message once locked, rather than failing silently.
+
+### 12.3 Idle session timeout
+
+- Implemented in `components/admin/AdminShell.tsx`, since it wraps every authenticated admin page.
+- **Timeout:** 30 minutes of no activity (mouse move, keypress, click, scroll, touch — throttled to once/second) triggers automatic sign-out.
+- **Warning:** at 29 minutes idle, a modal appears ("Your session is about to expire") with "Stay signed in" / "Sign out now" options, giving the executive a chance to extend the session deliberately.
+- On timeout, sign-out redirects to `/admin/login?reason=idle`, and the login page shows a calm explanatory notice rather than a bare error.
+- This is purely client-side (activity tracked in the browser) — it does not shorten the underlying Supabase JWT session, which has its own expiry/refresh handled by `@supabase/ssr`. The idle timer is a UX/security layer on top of that, specific to unattended admin sessions.
+
+### 12.4 Audit logging
+
+- Every `create`, `update`, `delete`, and `status_toggle` action on a program or opportunity writes one row to `audit_log` (see `supabase/security/schema-additions.sql`).
+- Each entry records: user ID + email, action type, entity type/slug/title, and for status toggles, the before/after values (`changes` jsonb column).
+- Logging happens via `src/lib/auditLog.ts`'s `logAuditEntry()`, called from within each server action **after** the underlying mutation has already succeeded. Logging failures are caught and logged to console — they never roll back or block the real mutation.
+- For deletes specifically, the entity's title is fetched **before** the row is removed, so the audit trail stays human-readable even after the data itself is gone.
+- `audit_log` RLS has **no update or delete policy** — entries are append-only at the application layer by design. Only a Supabase service-role key (not used anywhere in this codebase) could alter audit history directly in the database.
+- There is currently no UI to browse the audit log — it exists as a data layer for future use (e.g. an `/admin/audit-log` viewer) or direct inspection via Supabase Table Editor if ever needed.
+
+### 12.5 Security headers (CSP and related)
+
+Configured in `next.config.ts` via the `headers()` function, applied to every route.
+
+| Header | Value | Purpose |
+|---|---|---|
+| `Content-Security-Policy` | See below | Restricts script/style/image/connection sources |
+| `X-Frame-Options` | `DENY` | Blocks embedding in iframes (clickjacking) |
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Limits referrer leakage cross-origin |
+| `Permissions-Policy` | camera/mic/geolocation/payment/usb/browsing-topics all disabled | Reduces browser feature attack surface |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` | Forces HTTPS (production only, harmless in dev) |
+
+**CSP specifics and the tradeoffs behind them:**
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline'[ 'unsafe-eval' in dev only ];
+style-src 'self' 'unsafe-inline';
+img-src 'self' blob: data: https:;
+font-src 'self' data:;
+connect-src 'self' https://*.supabase.co;
+object-src 'none';
+base-uri 'self';
+form-action 'self';
+frame-ancestors 'none';
+upgrade-insecure-requests;
+```
+
+- **`'unsafe-inline'` on `style-src`** is required because admin components (`AdminShell`, `ProgramForm`, `OpportunityForm`, the tables, the login page) all use inline `<style>` tags for component-scoped CSS, and MUI (where still present) injects styles at runtime via Emotion.
+- **`'unsafe-inline'` on `script-src`** is required because Next.js itself injects a small inline `<script>` on every page to bootstrap hydration and deliver the RSC payload. Without it, React's HTML/CSS renders but never hydrates — confirmed directly during this hardening pass, where the admin login page rendered its layout but none of its interactive form elements worked until this was added.
+- **`'unsafe-eval'`** is added **only when `NODE_ENV === "development"`**, because React's dev-mode debugging (readable call stacks in error overlays) relies on `eval()`. Production never includes it — neither React nor Next.js use `eval()` in production builds.
+- **Nonce-based CSP** (the stricter alternative to `'unsafe-inline'`) was deliberately not used. Nonces require every page with inline scripts/styles to opt into dynamic rendering, which directly conflicts with this project's SSG + ISR architecture (`revalidate = 60` on `/programs`, `/opportunities`, and their detail pages — see §9). This tradeoff should be revisited only if the public site is ever migrated to fully dynamic rendering.
+- Even with `'unsafe-inline'`, `script-src` has no third-party origins listed — it still blocks any script loaded from an external domain, which is the more common real-world XSS vector compared to inline scripts in a codebase the team controls directly.
+- `connect-src` explicitly allow-lists `https://*.supabase.co` — without this, the browser-side Supabase client (login, image upload) would be silently blocked by the CSP.
+
+### 12.6 CSRF protection
+
+No custom CSRF token system was built, and this was a deliberate decision rather than an oversight:
+
+- **All state-changing admin operations go through Next.js Server Actions** (`src/actions/programs.ts`, `src/actions/opportunities.ts`, `src/actions/auth.ts`). Server Actions have CSRF protection built into the framework: each action is assigned an encrypted, unguessable action ID at build time, and Next.js validates the request's `Origin` header against the deployment's configured origin before executing the action. A request forged from a different origin is rejected before the action body ever runs.
+- **The only direct browser-to-Supabase calls** are authentication (`signInWithPassword`, `signOut`) and Storage uploads, both using the public anon key over HTTPS. These aren't cookie-session-based form posts in the traditional CSRF sense — they're authenticated API calls protected by Supabase's own RLS policies and the anon key's scope, not by ambient cookie credentials that a third-party site could silently ride along with.
+- **No traditional `<form action="...">` POST endpoints exist** in this codebase outside of `api/contact/route.ts`, which only accepts a name/email/message and has server-side validation; it has no destructive or sensitive effect that would benefit from a CSRF token in this context.
+- Net result: the attack CSRF tokens exist to prevent (a third-party site silently triggering a state change using the victim's ambient session) is already structurally hard to achieve here, because the privileged write paths are Server Actions (origin-checked by the framework) rather than classic cookie-authenticated form posts.
+
+### 12.7 Known limitations / explicitly deferred
+
+- **Server action rate limiting** (e.g. capping mutations per executive per minute) was considered and explicitly deferred — for the current admin team size, the risk/cost tradeoff didn't justify the added complexity and potential for false-positive lockouts during legitimate fast editing. Revisit if the team grows or abuse is observed.
+- **Image upload validation** is currently client-side only (`accept="image/jpeg,image/png,image/webp"` on the file input). There is no server-side MIME-type or size re-validation before the file reaches Supabase Storage. Still listed in the roadmap below.
+- Login lockout is per-email, not per-IP — see §12.2 for the reasoning.
 
 ---
 
@@ -355,12 +444,20 @@ Supabase Auth Redirect URLs must include both the production domain and `localho
 - On-demand ISR revalidation after every mutation
 - Loading skeletons for dashboard and list pages
 
+### Completed (Phase 7 — Security Hardening)
+- Login lockout: 5 failed attempts → 15-minute lockout, tracked in `login_attempts`
+- Idle session timeout: 30 minutes inactivity → auto sign-out, with 1-minute warning
+- Audit logging: every create/update/delete/status-toggle recorded in `audit_log`
+- Security headers via `next.config.ts`: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, HSTS
+- CSRF: verified and documented as covered by Server Actions' built-in origin checking (§12.6) — no custom token system needed
+
 ### Planned
 - Remove deprecated `src/data/` static files entirely
-- Server-side MIME type / size validation on image uploads (currently client-only)
+- Server-side MIME type / size validation on image uploads (currently client-only — see §12.7)
+- Audit log viewer UI in the admin dashboard (data layer exists, no UI yet)
 - Newsletter signup integration (Mailchimp or Resend)
 - Contact form email delivery via Resend API
-- Rate limiting on API routes
+- Server action rate limiting — explicitly deferred during Phase 7, revisit if team grows (§12.7)
 - Partners CRUD in admin dashboard (currently programs + opportunities only)
 - Test coverage for Server Actions and admin components
 
@@ -369,6 +466,7 @@ Supabase Auth Redirect URLs must include both the production domain and `localho
 - No automated test coverage yet
 - MUI bundle included but minimally used — evaluate removal
 - `src/data/*.ts` files remain in the repo but are fully unused — safe to delete after confirming no remaining references
+- `login_attempts` rows older than 24 hours are never purged automatically — harmless (queries only look at the last 15 minutes) but could be cleaned up via a scheduled job if the table grows large
 
 ---
 

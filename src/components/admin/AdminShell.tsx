@@ -20,7 +20,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-// ─── Idle session timeout ──────────────────────────────────────────────────────
+// --- Idle session timeout ------------------------------------------------------
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;       // 30 minutes
 const IDLE_WARNING_MS = 1 * 60 * 1000;        // show warning 1 minute before timeout
@@ -28,7 +28,7 @@ const ACTIVITY_THROTTLE_MS = 1000;            // only reset timer once per secon
 
 const ACTIVITY_EVENTS = ["mousemove", "keydown", "mousedown", "scroll", "touchstart"] as const;
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
+// --- Nav items ----------------------------------------------------------------
 
 interface NavItem {
   label: string;
@@ -41,49 +41,61 @@ const NAV_ITEMS: NavItem[] = [
     label: "Dashboard",
     href: "/admin",
     icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     ),
   },
   {
     label: "Programs",
     href: "/admin/programs",
     icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     ),
   },
   {
     label: "Opportunities",
     href: "/admin/opportunities",
     icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Partners",
+    href: "/admin/partners",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" />
+        <path d="M23 21v-2a4 4 0 00-3-3.87" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     ),
   },
 ];
 
-// ─── Logo mark ────────────────────────────────────────────────────────────────
+// --- Logo mark ----------------------------------------------------------------
 
 function LogoMark() {
   return (
-      <svg width="32" height="32" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-        <circle cx="24" cy="24" r="24" fill="var(--yah-orange)" opacity="0.15" />
-        <circle cx="24" cy="24" r="16" fill="var(--yah-orange)" opacity="0.25" />
-        <circle cx="24" cy="24" r="8" fill="var(--yah-orange)" />
-      </svg>
+    <svg width="32" height="32" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <circle cx="24" cy="24" r="24" fill="var(--yah-orange)" opacity="0.15" />
+      <circle cx="24" cy="24" r="16" fill="var(--yah-orange)" opacity="0.25" />
+      <circle cx="24" cy="24" r="8" fill="var(--yah-orange)" />
+    </svg>
   );
 }
 
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
+// --- Sidebar -----------------------------------------------------------------
 
 interface SidebarProps {
   pathname: string;
@@ -94,75 +106,75 @@ interface SidebarProps {
 
 function Sidebar({ pathname, onSignOut, user, onClose }: SidebarProps) {
   const isActive = (href: string) =>
-      href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 
   return (
-      <aside className="admin-sidebar">
-        {/* Brand */}
-        <div className="admin-sidebar-brand">
-          <LogoMark />
-          <div className="admin-sidebar-brand-text">
-            <span className="admin-sidebar-brand-name">YAH Admin</span>
-            <span className="admin-sidebar-brand-sub">Executive Portal</span>
-          </div>
-          {/* Mobile close button */}
-          {onClose && (
-              <button
-                  onClick={onClose}
-                  className="admin-sidebar-close"
-                  aria-label="Close menu"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-          )}
+    <aside className="admin-sidebar">
+      {/* Brand */}
+      <div className="admin-sidebar-brand">
+        <LogoMark />
+        <div className="admin-sidebar-brand-text">
+          <span className="admin-sidebar-brand-name">YAH Admin</span>
+          <span className="admin-sidebar-brand-sub">Executive Portal</span>
         </div>
+        {/* Mobile close button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="admin-sidebar-close"
+            aria-label="Close menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
 
-        {/* Nav */}
-        <nav className="admin-nav" aria-label="Admin navigation">
-          <span className="admin-nav-section-label">Content</span>
-          {NAV_ITEMS.map((item) => (
-              <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`admin-nav-item ${isActive(item.href) ? "admin-nav-item--active" : ""}`}
-                  aria-current={isActive(item.href) ? "page" : undefined}
-              >
-                <span className="admin-nav-item-icon">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-          ))}
-        </nav>
+      {/* Nav */}
+      <nav className="admin-nav" aria-label="Admin navigation">
+        <span className="admin-nav-section-label">Content</span>
+        {NAV_ITEMS.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onClose}
+            className={`admin-nav-item ${isActive(item.href) ? "admin-nav-item--active" : ""}`}
+            aria-current={isActive(item.href) ? "page" : undefined}
+          >
+            <span className="admin-nav-item-icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
 
-        {/* User + sign out */}
-        <div className="admin-sidebar-footer">
-          <div className="admin-user-chip">
-            <div className="admin-user-avatar" aria-hidden="true">
-              {user.email?.charAt(0).toUpperCase() ?? "E"}
-            </div>
-            <div className="admin-user-info">
-              <span className="admin-user-label">Signed in as</span>
-              <span className="admin-user-email" title={user.email ?? ""}>
+      {/* User + sign out */}
+      <div className="admin-sidebar-footer">
+        <div className="admin-user-chip">
+          <div className="admin-user-avatar" aria-hidden="true">
+            {user.email?.charAt(0).toUpperCase() ?? "E"}
+          </div>
+          <div className="admin-user-info">
+            <span className="admin-user-label">Signed in as</span>
+            <span className="admin-user-email" title={user.email ?? ""}>
               {user.email}
             </span>
-            </div>
           </div>
-          <button onClick={onSignOut} className="admin-signout-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Sign out
-          </button>
         </div>
-      </aside>
+        <button onClick={onSignOut} className="admin-signout-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </aside>
   );
 }
 
-// ─── Shell ────────────────────────────────────────────────────────────────────
+// --- Shell --------------------------------------------------------------------
 
 interface AdminShellProps {
   user: User;
@@ -175,31 +187,35 @@ export default function AdminShell({ user, children }: AdminShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showIdleWarning, setShowIdleWarning] = useState(false);
 
-  const lastActivityRef = useRef<number>(0);
+  const lastActivityRef = useRef(Date.now());
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derive page title from pathname
   const pageTitle =
-      pathname === "/admin"
-          ? "Dashboard"
-          : pathname.startsWith("/admin/programs/new")
-              ? "New Program"
-              : pathname.startsWith("/admin/programs")
-                  ? "Programs"
-                  : pathname.startsWith("/admin/opportunities/new")
-                      ? "New Opportunity"
-                      : pathname.startsWith("/admin/opportunities")
-                          ? "Opportunities"
-                          : "Admin";
+    pathname === "/admin"
+      ? "Dashboard"
+      : pathname.startsWith("/admin/programs/new")
+      ? "New Program"
+      : pathname.startsWith("/admin/programs")
+      ? "Programs"
+      : pathname.startsWith("/admin/opportunities/new")
+      ? "New Opportunity"
+      : pathname.startsWith("/admin/opportunities")
+      ? "Opportunities"
+      : pathname.startsWith("/admin/partners/new")
+      ? "New Partner"
+      : pathname.startsWith("/admin/partners")
+      ? "Partners"
+      : "Admin";
 
-  const handleSignOut = useCallback(async (reason?: "idle") => {
+  async function handleSignOut(reason?: "idle") {
     const supabase = createClient();
     await supabase.auth.signOut();
     const loginUrl = reason === "idle" ? "/admin/login?reason=idle" : "/admin/login";
     router.push(loginUrl);
     router.refresh();
-  }, [router]);
+  }
 
   const scheduleIdleTimers = useCallback(() => {
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
@@ -212,7 +228,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
     idleTimeoutRef.current = setTimeout(() => {
       handleSignOut("idle");
     }, IDLE_TIMEOUT_MS);
-  }, [handleSignOut]);
+  }, []);
 
   const handleActivity = useCallback(() => {
     const now = Date.now();
@@ -227,12 +243,12 @@ export default function AdminShell({ user, children }: AdminShellProps) {
     scheduleIdleTimers();
 
     ACTIVITY_EVENTS.forEach((event) =>
-        window.addEventListener(event, handleActivity, { passive: true })
+      window.addEventListener(event, handleActivity, { passive: true })
     );
 
     return () => {
       ACTIVITY_EVENTS.forEach((event) =>
-          window.removeEventListener(event, handleActivity)
+        window.removeEventListener(event, handleActivity)
       );
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
       if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
@@ -246,108 +262,108 @@ export default function AdminShell({ user, children }: AdminShellProps) {
   }
 
   return (
-      <div className="admin-shell">
+    <div className="admin-shell">
 
-        {/* Desktop sidebar */}
-        <div className="admin-sidebar-wrap">
-          <Sidebar
-              pathname={pathname}
-              onSignOut={handleSignOut}
-              user={user}
-          />
-        </div>
+      {/* Desktop sidebar */}
+      <div className="admin-sidebar-wrap">
+        <Sidebar
+          pathname={pathname}
+          onSignOut={handleSignOut}
+          user={user}
+        />
+      </div>
 
-        {/* Mobile drawer overlay */}
-        {drawerOpen && (
-            <div
-                className="admin-drawer-overlay"
-                onClick={() => setDrawerOpen(false)}
-                aria-hidden="true"
-            />
-        )}
+      {/* Mobile drawer overlay */}
+      {drawerOpen && (
+        <div
+          className="admin-drawer-overlay"
+          onClick={() => setDrawerOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
-        {/* Mobile drawer */}
-        <div className={`admin-drawer ${drawerOpen ? "admin-drawer--open" : ""}`}>
-          <Sidebar
-              pathname={pathname}
-              onSignOut={handleSignOut}
-              user={user}
-              onClose={() => setDrawerOpen(false)}
-          />
-        </div>
+      {/* Mobile drawer */}
+      <div className={`admin-drawer ${drawerOpen ? "admin-drawer--open" : ""}`}>
+        <Sidebar
+          pathname={pathname}
+          onSignOut={handleSignOut}
+          user={user}
+          onClose={() => setDrawerOpen(false)}
+        />
+      </div>
 
-        {/* Main content area */}
-        <div className="admin-main">
+      {/* Main content area */}
+      <div className="admin-main">
 
-          {/* Topbar */}
-          <header className="admin-topbar">
-            {/* Mobile menu button */}
-            <button
-                className="admin-menu-btn"
-                onClick={() => setDrawerOpen(true)}
-                aria-label="Open menu"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        {/* Topbar */}
+        <header className="admin-topbar">
+          {/* Mobile menu button */}
+          <button
+            className="admin-menu-btn"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          <h1 className="admin-topbar-title">{pageTitle}</h1>
+
+          {/* View site link */}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="admin-view-site"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              <polyline points="15 3 21 3 21 9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            View site
+          </a>
+        </header>
+
+        {/* Page content */}
+        <main className="admin-content">
+          {children}
+        </main>
+
+      </div>
+
+      {/* Idle timeout warning */}
+      {showIdleWarning && (
+        <div className="idle-warning-overlay" role="alertdialog" aria-modal="true" aria-label="Session expiring soon">
+          <div className="idle-warning-card">
+            <div className="idle-warning-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
+                <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
-
-            <h1 className="admin-topbar-title">{pageTitle}</h1>
-
-            {/* View site link */}
-            <Link
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="admin-view-site"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points="15 3 21 3 21 9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              View site
-            </Link>
-          </header>
-
-          {/* Page content */}
-          <main className="admin-content">
-            {children}
-          </main>
-
-        </div>
-
-        {/* Idle timeout warning */}
-        {showIdleWarning && (
-            <div className="idle-warning-overlay" role="alertdialog" aria-modal="true" aria-label="Session expiring soon">
-              <div className="idle-warning-card">
-                <div className="idle-warning-icon" aria-hidden="true">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
-                    <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <h3 className="idle-warning-title">Your session is about to expire</h3>
-                <p className="idle-warning-body">
-                  You`ve been inactive for a while. You`ll be signed out automatically
-                  in about a minute to protect this account.
-                </p>
-                <div className="idle-warning-actions">
-                  <button onClick={stayActive} className="idle-stay-btn">
-                    Stay signed in
-                  </button>
-                  <button onClick={() => handleSignOut()} className="idle-signout-btn">
-                    Sign out now
-                  </button>
-                </div>
-              </div>
             </div>
-        )}
+            <h3 className="idle-warning-title">Your session is about to expire</h3>
+            <p className="idle-warning-body">
+              You've been inactive for a while. You'll be signed out automatically
+              in about a minute to protect this account.
+            </p>
+            <div className="idle-warning-actions">
+              <button onClick={stayActive} className="idle-stay-btn">
+                Stay signed in
+              </button>
+              <button onClick={() => handleSignOut()} className="idle-signout-btn">
+                Sign out now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-        <style>{`
-        /* ── Shell layout ── */
+      <style>{`
+        /* -- Shell layout -- */
         .admin-shell {
           display: flex;
           min-height: 100vh;
@@ -355,7 +371,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           font-family: var(--font-body);
         }
 
-        /* ── Sidebar (desktop) ── */
+        /* -- Sidebar (desktop) -- */
         .admin-sidebar-wrap {
           width: 256px;
           flex-shrink: 0;
@@ -549,7 +565,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           border-color: rgba(255,255,255,0.2);
         }
 
-        /* ── Mobile drawer ── */
+        /* -- Mobile drawer -- */
         .admin-drawer-overlay {
           position: fixed;
           inset: 0;
@@ -573,7 +589,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           transform: translateX(0);
         }
 
-        /* ── Main content ── */
+        /* -- Main content -- */
         .admin-main {
           flex: 1;
           min-width: 0;
@@ -647,7 +663,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           padding: 2rem 1.5rem;
         }
 
-        /* ── Idle timeout warning ── */
+        /* -- Idle timeout warning -- */
         .idle-warning-overlay {
           position: fixed;
           inset: 0;
@@ -738,7 +754,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           color: var(--yah-navy);
         }
 
-        /* ── Responsive ── */
+        /* -- Responsive -- */
         @media (max-width: 1024px) {
           .admin-sidebar-wrap {
             display: none;
@@ -753,6 +769,6 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           }
         }
       `}</style>
-      </div>
+    </div>
   );
 }
