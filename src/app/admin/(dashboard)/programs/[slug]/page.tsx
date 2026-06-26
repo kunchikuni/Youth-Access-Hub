@@ -1,19 +1,23 @@
-/**
+﻿/**
  * Edit Program Page
  * Route: /admin/programs/[slug]
  *
- * Server Component — fetches the existing program from Supabase
+ * Server Component â€” fetches the existing program from Supabase
  * and renders ProgramForm in edit mode (prefilled).
  *
- * @module app/admin/programs/[slug]/page
+ * Guards against the slug being "new" â€” that route is handled by
+ * /admin/programs/new/page.tsx but Next.js may still route here
+ * if there is any ambiguity.
+ *
+ * @module app/admin/(dashboard)/programs/[slug]/page
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ProgramForm from "@/components/admin/ProgramForm";
 import type { Program } from "@/types/program";
 
-export const metadata = { title: "Edit Program — YAH Admin" };
+export const metadata = { title: "Edit Program â€” YAH Admin" };
 
 interface EditProgramPageProps {
   params: Promise<{ slug: string }>;
@@ -21,6 +25,12 @@ interface EditProgramPageProps {
 
 export default async function EditProgramPage({ params }: EditProgramPageProps) {
   const { slug } = await params;
+
+  // Guard: if Next.js routes "new" here instead of new/page.tsx, redirect correctly
+  if (slug === "new") {
+    redirect("/admin/programs/new");
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -31,7 +41,7 @@ export default async function EditProgramPage({ params }: EditProgramPageProps) 
 
   if (error || !data) notFound();
 
-  // Map DB row (snake_case) → Program type (camelCase) for the form
+  // Map DB row (snake_case) -> Program type (camelCase) for the form
   const program: Program = {
     slug:        data.slug,
     title:       data.title,
@@ -44,9 +54,9 @@ export default async function EditProgramPage({ params }: EditProgramPageProps) 
     outcomes:    data.outcomes ?? [],
     mentors:     data.mentors  ?? [],
     featured:    data.featured,
-    ...(data.cover_image  && { photo:      data.cover_image }),
-    ...(data.start_date   && { startDate:  data.start_date }),
-    ...(data.partner      && { partner:    data.partner }),
+    ...(data.cover_image && { photo:     data.cover_image }),
+    ...(data.start_date  && { startDate: data.start_date }),
+    ...(data.partner     && { partner:   data.partner }),
   };
 
   return (

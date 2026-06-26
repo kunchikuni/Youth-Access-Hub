@@ -1,19 +1,23 @@
-/**
+﻿/**
  * Edit Opportunity Page
  * Route: /admin/opportunities/[slug]
  *
- * Server Component — fetches the existing opportunity from Supabase
+ * Server Component â€” fetches the existing opportunity from Supabase
  * and renders OpportunityForm in edit mode (prefilled).
  *
- * @module app/admin/opportunities/[slug]/page
+ * Guards against the slug being "new" â€” that route is handled by
+ * /admin/opportunities/new/page.tsx but Next.js may still route here
+ * if there is any ambiguity.
+ *
+ * @module app/admin/(dashboard)/opportunities/[slug]/page
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import OpportunityForm from "@/components/admin/OpportunityForm";
 import type { Opportunity } from "@/types/opportunity";
 
-export const metadata = { title: "Edit Opportunity — YAH Admin" };
+export const metadata = { title: "Edit Opportunity â€” YAH Admin" };
 
 interface EditOpportunityPageProps {
   params: Promise<{ slug: string }>;
@@ -21,7 +25,13 @@ interface EditOpportunityPageProps {
 
 export default async function EditOpportunityPage({ params }: EditOpportunityPageProps) {
   const { slug } = await params;
-  const supabase  = await createClient();
+
+  // Guard: if Next.js routes "new" here instead of new/page.tsx, redirect correctly
+  if (slug === "new") {
+    redirect("/admin/opportunities/new");
+  }
+
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("opportunities")
@@ -31,7 +41,7 @@ export default async function EditOpportunityPage({ params }: EditOpportunityPag
 
   if (error || !data) notFound();
 
-  // Map DB row (snake_case) → Opportunity type (camelCase) for the form
+  // Map DB row (snake_case) -> Opportunity type (camelCase) for the form
   const opportunity: Opportunity = {
     slug:        data.slug,
     title:       data.title,
@@ -45,8 +55,8 @@ export default async function EditOpportunityPage({ params }: EditOpportunityPag
     eligibility: data.eligibility ?? [],
     howToApply:  data.how_to_apply,
     featured:    data.featured,
-    ...(data.deadline   && { deadline:  data.deadline }),
-    ...(data.apply_url  && { applyUrl:  data.apply_url }),
+    ...(data.deadline  && { deadline: data.deadline }),
+    ...(data.apply_url && { applyUrl: data.apply_url }),
   };
 
   return (

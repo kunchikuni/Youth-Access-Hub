@@ -1,3 +1,20 @@
+# ============================================================
+# Fix script: corrects character encoding on the public Partners
+# page by replacing literal arrow characters (-> rendered as garbled
+# bytes due to a prior PowerShell 5.1 encoding issue) with the
+# existing ArrowIcon SVG component, matching the pattern already
+# used in Hero.tsx and CTABanner.tsx.
+#
+# This file is now fully ASCII - zero non-ASCII characters remain,
+# making it immune to this class of encoding bug going forward.
+#
+# Run this from your project ROOT (where package.json lives):
+#   .\fix-partners-page-encoding.ps1
+# ============================================================
+
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+$partnersPageContent = @'
 /**
  * Partners Page - /partners
  * @module app/partners/page
@@ -115,3 +132,43 @@ export default async function PartnersPage() {
     </>
   );
 }
+
+'@
+
+$destPath = "src\app\partners\page.tsx"
+$fullPath = Join-Path (Get-Location) $destPath
+
+[System.IO.File]::WriteAllText($fullPath, $partnersPageContent, $utf8NoBom)
+Write-Host "Written: $destPath" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "Verifying contents..." -ForegroundColor Cyan
+
+$check = Get-Content -LiteralPath $destPath -Raw
+
+if ($check -match "PartnersPage") {
+    Write-Host "OK: $destPath contains PartnersPage" -ForegroundColor Green
+} else {
+    Write-Host "PROBLEM: $destPath missing expected content" -ForegroundColor Red
+}
+
+if ($check -match "ArrowIcon") {
+    Write-Host "OK: $destPath uses ArrowIcon component" -ForegroundColor Green
+} else {
+    Write-Host "PROBLEM: ArrowIcon import/usage missing" -ForegroundColor Red
+}
+
+# Confirm no garbled multi-byte sequences remain (the tell-tale
+# Ã¢â‚¬â€œ style corruption pattern from before)
+if ($check -match "[\u00C0-\u00FF]{2,}") {
+    Write-Host "WARNING: possible garbled encoding still detected - check manually" -ForegroundColor Yellow
+} else {
+    Write-Host "OK: no garbled multi-byte sequences detected" -ForegroundColor Green
+}
+
+Write-Host ""
+Write-Host "Done. Now run:" -ForegroundColor Cyan
+Write-Host "  Remove-Item -Recurse -Force .next"
+Write-Host "  npm run dev"
+Write-Host ""
+Write-Host "Then check /partners - 'Visit website' and 'Get In Touch' should show a clean arrow icon, not garbled text." -ForegroundColor Cyan

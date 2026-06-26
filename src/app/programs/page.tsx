@@ -1,5 +1,5 @@
 /**
- * Programs Page — /programs
+ * Programs Page â€” /programs
  * @module app/programs/page
  */
 import type { Metadata } from "next";
@@ -10,6 +10,9 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import Card, { CardHeader, CardBody, CardFooter, CardIcon } from "@/components/ui/Card";
 import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import CTABanner from "@/components/sections/CTABanner";
+import { ClockIcon, AudienceIcon } from "@/components/ui/MetaIcons";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Mentorship Programs",
@@ -62,12 +65,13 @@ export default async function ProgramsPage() {
                     <h2 className="font-bold text-lg mb-2 leading-snug" style={{ fontFamily: "var(--font-heading)", color: program.featured ? "var(--yah-white)" : "var(--yah-navy)" }}>{program.title}</h2>
                     <p className="text-sm leading-relaxed mb-4" style={{ color: program.featured ? "rgba(255,255,255,0.72)" : "var(--yah-slate)" }}>{program.tagline}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: program.featured ? "rgba(255,255,255,0.5)" : "var(--yah-slate)" }}>
-                      <span>⏱ {program.duration}</span><span>🎓 {program.audience.split(" ").slice(0, 4).join(" ")}</span>
+                      <span className="inline-flex items-center gap-1"><ClockIcon size={14} /> {program.duration}</span>
+                      <span className="inline-flex items-center gap-1"><AudienceIcon size={14} /> {program.audience.split(" ").slice(0, 3).join(" ")}</span>
                     </div>
                   </CardBody>
-                  <CardFooter bordered className="flex items-center justify-between" style={program.featured ? { borderTopColor: "rgba(255,255,255,0.12)" } : undefined}>
-                    <span className="text-xs font-semibold" style={{ color: program.featured ? "var(--yah-orange)" : "var(--yah-teal)", fontFamily: "var(--font-heading)" }}>{program.mentors.length} mentor{program.mentors.length !== 1 ? "s" : ""}</span>
-                    <span className="text-xs font-semibold" style={{ color: program.featured ? "rgba(255,255,255,0.6)" : "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>View Program →</span>
+                  <CardFooter bordered className="flex items-center justify-between">
+                    <span className="text-xs font-semibold" style={{ color: program.featured ? "rgba(255,255,255,0.6)" : "var(--yah-slate)", fontFamily: "var(--font-heading)" }}>{program.category}</span>
+                    <span className="text-xs font-semibold" style={{ color: program.featured ? "var(--yah-orange)" : "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>View Details â†’</span>
                   </CardFooter>
                 </Card>
               </Link>

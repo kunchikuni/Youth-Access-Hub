@@ -1,13 +1,13 @@
 /**
- * Admin Layout
- * Route shell: /admin/*  (excludes /admin/login — that has its own layout)
+ * Admin Dashboard Layout
+ * Applies to: /admin, /admin/programs/*, /admin/opportunities/*
+ * Does NOT apply to: /admin/login (that lives in the (auth) group)
  *
  * - Server Component: reads the Supabase session server-side
  * - Redirects unauthenticated users to /admin/login
- *   (middleware does this too — this is a belt-and-braces guard)
- * - Renders the sidebar + topbar shell around all admin pages
+ * - Renders the AdminShell (sidebar + topbar) around all dashboard pages
  *
- * @module app/admin/layout
+ * @module app/admin/(dashboard)/layout
  */
 
 import { redirect } from "next/navigation";
@@ -22,19 +22,19 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-interface AdminLayoutProps {
+interface AdminDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function AdminLayout({ children }: AdminLayoutProps) {
+export default async function AdminDashboardLayout({
+  children,
+}: AdminDashboardLayoutProps) {
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Belt-and-braces: middleware already handles this redirect,
-  // but we guard here too in case middleware is bypassed.
   if (!user) {
     redirect("/admin/login");
   }

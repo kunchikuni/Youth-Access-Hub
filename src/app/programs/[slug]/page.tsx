@@ -1,5 +1,5 @@
 /**
- * Program Detail Page — /programs/[slug]
+ * Program Detail Page â€” /programs/[slug]
  * @module app/programs/[slug]/page
  */
 import type { Metadata } from "next";
@@ -10,6 +10,9 @@ import { formatDate } from "@/lib/utils";
 import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import Button, { ArrowIcon } from "@/components/ui/Button";
 import CTABanner from "@/components/sections/CTABanner";
+import { ClockIcon, AudienceIcon, CalendarIcon, PartnerIcon, PeopleIcon } from "@/components/ui/MetaIcons";
+
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const slugs = await getProgramSlugs();
@@ -47,14 +50,14 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
           <p className="text-lg mb-8 max-w-2xl" style={{ color: "rgba(255,255,255,0.75)" }}>{program.tagline}</p>
           <div className="flex flex-wrap gap-4">
             {[
-              { icon: "⏱", label: program.duration },
-              { icon: "🎓", label: program.audience },
-              ...(program.startDate ? [{ icon: "📅", label: `Starts ${formatDate(program.startDate)}` }] : []),
-              ...(program.partner ? [{ icon: "🤝", label: program.partner }] : []),
+              { icon: <ClockIcon size={14} />, label: program.duration },
+              { icon: <AudienceIcon size={14} />, label: program.audience },
+              ...(program.startDate ? [{ icon: <CalendarIcon size={14} />, label: `Starts ${formatDate(program.startDate)}` }] : []),
+              ...(program.partner ? [{ icon: <PartnerIcon size={14} />, label: program.partner }] : []),
             ].map(({ icon, label }) => (
               <div key={label} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm"
                 style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <span aria-hidden="true">{icon}</span> {label}
+                <span aria-hidden="true" className="flex items-center">{icon}</span> {label}
               </div>
             ))}
           </div>
@@ -100,7 +103,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                       </div>
                       <div>
                         <p className="font-bold text-sm" style={{ fontFamily: "var(--font-heading)", color: "var(--yah-navy)" }}>{mentor.name}</p>
-                        <p className="text-xs mb-2" style={{ color: "var(--yah-teal)" }}>{mentor.title} · {mentor.organisation}</p>
+                        <p className="text-xs mb-2" style={{ color: "var(--yah-teal)" }}>{mentor.title} Â· {mentor.organisation}</p>
                         <p className="text-sm leading-relaxed" style={{ color: "var(--yah-slate)" }}>{mentor.bio}</p>
                       </div>
                     </div>
@@ -117,10 +120,10 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>
                   <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--yah-orange)", fontFamily: "var(--font-heading)" }}>Quick Details</p>
                   <ul className="flex flex-col gap-2 text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
-                    <li>⏱ Duration: {program.duration}</li>
-                    <li>🎓 For: {program.audience}</li>
-                    {program.startDate && <li>📅 Starts: {formatDate(program.startDate)}</li>}
-                    <li>👥 Mentors: {program.mentors.length}</li>
+                    <li className="flex items-center gap-2"><ClockIcon size={14} /> Duration: {program.duration}</li>
+                    <li className="flex items-center gap-2"><AudienceIcon size={14} /> For: {program.audience}</li>
+                    {program.startDate && <li className="flex items-center gap-2"><CalendarIcon size={14} /> Starts: {formatDate(program.startDate)}</li>}
+                    <li className="flex items-center gap-2"><PeopleIcon size={14} /> Mentors: {program.mentors.length}</li>
                   </ul>
                 </div>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>

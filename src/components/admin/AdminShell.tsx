@@ -14,13 +14,21 @@
  * @module components/admin/AdminShell
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
+// --- Idle session timeout ------------------------------------------------------
+
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;       // 30 minutes
+const IDLE_WARNING_MS = 1 * 60 * 1000;        // show warning 1 minute before timeout
+const ACTIVITY_THROTTLE_MS = 1000;            // only reset timer once per second max
+
+const ACTIVITY_EVENTS = ["mousemove", "keydown", "mousedown", "scroll", "touchstart"] as const;
+
+// --- Nav items ----------------------------------------------------------------
 
 interface NavItem {
   label: string;
@@ -61,9 +69,21 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    label: "Partners",
+    href: "/admin/partners",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.75" />
+        <path d="M23 21v-2a4 4 0 00-3-3.87" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
 ];
 
-// ─── Logo mark ────────────────────────────────────────────────────────────────
+// --- Logo mark ----------------------------------------------------------------
 
 function LogoMark() {
   return (
@@ -75,7 +95,7 @@ function LogoMark() {
   );
 }
 
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
+// --- Sidebar -----------------------------------------------------------------
 
 interface SidebarProps {
   pathname: string;
@@ -154,7 +174,7 @@ function Sidebar({ pathname, onSignOut, user, onClose }: SidebarProps) {
   );
 }
 
-// ─── Shell ────────────────────────────────────────────────────────────────────
+// --- Shell --------------------------------------------------------------------
 
 interface AdminShellProps {
   user: User;
@@ -165,6 +185,11 @@ export default function AdminShell({ user, children }: AdminShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
+
+  const lastActivityRef = useRef(Date.now());
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derive page title from pathname
   const pageTitle =
@@ -178,13 +203,62 @@ export default function AdminShell({ user, children }: AdminShellProps) {
       ? "New Opportunity"
       : pathname.startsWith("/admin/opportunities")
       ? "Opportunities"
+      : pathname.startsWith("/admin/partners/new")
+      ? "New Partner"
+      : pathname.startsWith("/admin/partners")
+      ? "Partners"
       : "Admin";
 
-  async function handleSignOut() {
+  async function handleSignOut(reason?: "idle") {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/admin/login");
+    const loginUrl = reason === "idle" ? "/admin/login?reason=idle" : "/admin/login";
+    router.push(loginUrl);
     router.refresh();
+  }
+
+  const scheduleIdleTimers = useCallback(() => {
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+
+    warningTimeoutRef.current = setTimeout(() => {
+      setShowIdleWarning(true);
+    }, IDLE_TIMEOUT_MS - IDLE_WARNING_MS);
+
+    idleTimeoutRef.current = setTimeout(() => {
+      handleSignOut("idle");
+    }, IDLE_TIMEOUT_MS);
+  }, []);
+
+  const handleActivity = useCallback(() => {
+    const now = Date.now();
+    if (now - lastActivityRef.current < ACTIVITY_THROTTLE_MS) return;
+    lastActivityRef.current = now;
+
+    setShowIdleWarning(false);
+    scheduleIdleTimers();
+  }, [scheduleIdleTimers]);
+
+  useEffect(() => {
+    scheduleIdleTimers();
+
+    ACTIVITY_EVENTS.forEach((event) =>
+      window.addEventListener(event, handleActivity, { passive: true })
+    );
+
+    return () => {
+      ACTIVITY_EVENTS.forEach((event) =>
+        window.removeEventListener(event, handleActivity)
+      );
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    };
+  }, [handleActivity, scheduleIdleTimers]);
+
+  function stayActive() {
+    setShowIdleWarning(false);
+    lastActivityRef.current = Date.now();
+    scheduleIdleTimers();
   }
 
   return (
@@ -240,7 +314,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
 
           {/* View site link */}
           <a
-            href="/public"
+            href="/"
             target="_blank"
             rel="noopener noreferrer"
             className="admin-view-site"
@@ -261,8 +335,35 @@ export default function AdminShell({ user, children }: AdminShellProps) {
 
       </div>
 
+      {/* Idle timeout warning */}
+      {showIdleWarning && (
+        <div className="idle-warning-overlay" role="alertdialog" aria-modal="true" aria-label="Session expiring soon">
+          <div className="idle-warning-card">
+            <div className="idle-warning-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.75" />
+                <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h3 className="idle-warning-title">Your session is about to expire</h3>
+            <p className="idle-warning-body">
+              You've been inactive for a while. You'll be signed out automatically
+              in about a minute to protect this account.
+            </p>
+            <div className="idle-warning-actions">
+              <button onClick={stayActive} className="idle-stay-btn">
+                Stay signed in
+              </button>
+              <button onClick={() => handleSignOut()} className="idle-signout-btn">
+                Sign out now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
-        /* ── Shell layout ── */
+        /* -- Shell layout -- */
         .admin-shell {
           display: flex;
           min-height: 100vh;
@@ -270,7 +371,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           font-family: var(--font-body);
         }
 
-        /* ── Sidebar (desktop) ── */
+        /* -- Sidebar (desktop) -- */
         .admin-sidebar-wrap {
           width: 256px;
           flex-shrink: 0;
@@ -464,7 +565,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           border-color: rgba(255,255,255,0.2);
         }
 
-        /* ── Mobile drawer ── */
+        /* -- Mobile drawer -- */
         .admin-drawer-overlay {
           position: fixed;
           inset: 0;
@@ -488,7 +589,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           transform: translateX(0);
         }
 
-        /* ── Main content ── */
+        /* -- Main content -- */
         .admin-main {
           flex: 1;
           min-width: 0;
@@ -562,7 +663,98 @@ export default function AdminShell({ user, children }: AdminShellProps) {
           padding: 2rem 1.5rem;
         }
 
-        /* ── Responsive ── */
+        /* -- Idle timeout warning -- */
+        .idle-warning-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 30, 74, 0.55);
+          backdrop-filter: blur(3px);
+          z-index: 200;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+        }
+
+        .idle-warning-card {
+          background: var(--yah-white);
+          border-radius: var(--radius-xl);
+          padding: 2rem;
+          max-width: 420px;
+          width: 100%;
+          box-shadow: 0 20px 60px rgba(15, 30, 74, 0.25);
+          text-align: center;
+        }
+
+        .idle-warning-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: rgba(217, 119, 6, 0.1);
+          color: #d97706;
+          margin-bottom: 1rem;
+        }
+
+        .idle-warning-title {
+          font-family: var(--font-heading);
+          font-size: 1.125rem;
+          font-weight: 700;
+          color: var(--yah-navy);
+          margin: 0 0 0.625rem;
+        }
+
+        .idle-warning-body {
+          font-size: 0.9375rem;
+          color: var(--yah-slate);
+          line-height: 1.6;
+          margin: 0 0 1.5rem;
+        }
+
+        .idle-warning-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.625rem;
+        }
+
+        .idle-stay-btn {
+          padding: 0.75rem 1.25rem;
+          background: var(--yah-navy);
+          color: var(--yah-white);
+          border: none;
+          border-radius: var(--radius-md);
+          font-family: var(--font-heading);
+          font-size: 0.9375rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 150ms ease;
+        }
+
+        .idle-stay-btn:hover {
+          background: var(--yah-dark);
+        }
+
+        .idle-signout-btn {
+          padding: 0.625rem 1.25rem;
+          background: transparent;
+          color: var(--yah-slate);
+          border: 1.5px solid var(--yah-light-gray);
+          border-radius: var(--radius-md);
+          font-family: var(--font-heading);
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: border-color 150ms ease, color 150ms ease;
+        }
+
+        .idle-signout-btn:hover {
+          border-color: var(--yah-navy);
+          color: var(--yah-navy);
+        }
+
+        /* -- Responsive -- */
         @media (max-width: 1024px) {
           .admin-sidebar-wrap {
             display: none;

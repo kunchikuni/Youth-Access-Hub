@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Admin Opportunities List
  * Route: /admin/opportunities
  *
- * Server Component — fetches all opportunities from Supabase.
+ * Server Component â€” fetches all opportunities from Supabase.
  *
- * @module app/admin/opportunities/page
+ * @module app/admin/(dashboard)/opportunities/page
  */
 
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import OpportunitiesTable from "@/components/admin/OpportunitiesTable";
 import type { Opportunity } from "@/types/opportunity";
 
-export const metadata = { title: "Opportunities — YAH Admin" };
+export const metadata = { title: "Opportunities | YAH Admin" };
 
 export default async function AdminOpportunitiesPage() {
   const supabase = await createClient();

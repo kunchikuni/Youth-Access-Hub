@@ -1,12 +1,12 @@
-/**
+﻿/**
  * Admin Programs List
  * Route: /admin/programs
  *
- * Server Component — fetches all programs from Supabase.
+ * Server Component â€” fetches all programs from Supabase.
  * Renders a table with status badges, featured toggle info,
  * and links to edit or create programs.
  *
- * @module app/admin/programs/page
+ * @module app/admin/(dashboard)/programs/page
  */
 
 import Link from "next/link";
@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import ProgramsTable from "@/components/admin/ProgramsTable";
 import type { Program } from "@/types/program";
 
-export const metadata = { title: "Programs — YAH Admin" };
+export const metadata = { title: "Programs â€” YAH Admin" };
 
 export default async function AdminProgramsPage() {
   const supabase = await createClient();

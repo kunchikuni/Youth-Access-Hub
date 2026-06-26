@@ -84,7 +84,7 @@ function mapProgram(row: ProgramRow): Program {
     outcomes: row.outcomes ?? [],
     mentors: row.mentors ?? [],
     featured: row.featured,
-    ...(row.cover_image && { photo: row.cover_image }),
+    ...(row.cover_image && { coverImageUrl: row.cover_image }),
     ...(row.start_date && { startDate: row.start_date }),
     ...(row.partner && { partner: row.partner }),
   };

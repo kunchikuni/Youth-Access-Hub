@@ -46,7 +46,7 @@ export default function AboutPage() {
               <SectionHeading eyebrow="The Problem" title="A Fragmented System" decorativeBar accent="orange"
                 subtitle="Many young people struggle not just with limited opportunities, but with navigating complex and fragmented support systems. Multiple organisations offer training, mentorship, employment pathways, and social assistance — yet youth often lack the information, networks, and guidance to access these services effectively." />
               <p className="mt-4 leading-relaxed text-sm" style={{ color: "var(--yah-slate)" }}>
-                This disconnect results in underutilised programs, duplicated efforts, and missed opportunities for youth development. The challenge isn't a lack of resources — it's coordination.
+                This disconnect results in underutilised programs, duplicated efforts, and missed opportunities for youth development. The challenge isn`t a lack of resources — it`s coordination.
               </p>
             </div>
             <div className="p-8 rounded-2xl" style={{ backgroundColor: "var(--yah-off-white)", border: "1px solid var(--yah-light-gray)" }}>

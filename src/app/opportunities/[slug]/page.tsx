@@ -1,5 +1,5 @@
 /**
- * Opportunity Detail Page — /opportunities/[slug]
+ * Opportunity Detail Page â€” /opportunities/[slug]
  * @module app/opportunities/[slug]/page
  */
 import type { Metadata } from "next";
@@ -10,6 +10,9 @@ import { formatDate } from "@/lib/utils";
 import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import Button, { ArrowIcon } from "@/components/ui/Button";
 import CTABanner from "@/components/sections/CTABanner";
+import { LocationIcon, BuildingIcon, ClockIcon, AudienceIcon } from "@/components/ui/MetaIcons";
+
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const slugs = await getOpportunitySlugs();
@@ -45,13 +48,13 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           <p className="text-lg mb-8 max-w-2xl" style={{ color: "rgba(255,255,255,0.75)" }}>{opp.tagline}</p>
           <div className="flex flex-wrap gap-4">
             {[
-              { icon: "📍", label: opp.location },
-              { icon: "🏢", label: opp.provider },
-              ...(opp.deadline ? [{ icon: "⏰", label: `Deadline: ${formatDate(opp.deadline)}` }] : []),
+              { icon: <LocationIcon size={14} />, label: opp.location },
+              { icon: <BuildingIcon size={14} />, label: opp.provider },
+              ...(opp.deadline ? [{ icon: <ClockIcon size={14} />, label: `Deadline: ${formatDate(opp.deadline)}` }] : []),
             ].map(({ icon, label }) => (
               <div key={label} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm"
                 style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <span aria-hidden="true">{icon}</span> {label}
+                <span aria-hidden="true" className="flex items-center">{icon}</span> {label}
               </div>
             ))}
           </div>
@@ -102,10 +105,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>
                   <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--yah-teal)", fontFamily: "var(--font-heading)" }}>Quick Details</p>
                   <ul className="flex flex-col gap-2 text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
-                    <li>📍 {opp.location}</li>
-                    <li>🏢 {opp.provider}</li>
-                    <li>🎓 {opp.audience}</li>
-                    {opp.deadline && <li>⏰ Deadline: {formatDate(opp.deadline)}</li>}
+                    <li className="flex items-center gap-2"><LocationIcon size={14} /> {opp.location}</li>
+                    <li className="flex items-center gap-2"><BuildingIcon size={14} /> {opp.provider}</li>
+                    <li className="flex items-center gap-2"><AudienceIcon size={14} /> {opp.audience}</li>
+                    {opp.deadline && <li className="flex items-center gap-2"><ClockIcon size={14} /> Deadline: {formatDate(opp.deadline)}</li>}
                   </ul>
                 </div>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>

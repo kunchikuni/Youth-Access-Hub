@@ -1,5 +1,5 @@
 /**
- * Opportunities Page — /opportunities
+ * Opportunities Page ” /opportunities
  * @module app/opportunities/page
  */
 import type { Metadata } from "next";
@@ -11,6 +11,9 @@ import Card, { CardHeader, CardBody, CardFooter, CardIcon } from "@/components/u
 import Badge, { statusBadge, categoryBadge } from "@/components/ui/Badge";
 import CTABanner from "@/components/sections/CTABanner";
 import { formatDate } from "@/lib/utils";
+import { LocationIcon, BuildingIcon, ClockIcon } from "@/components/ui/MetaIcons";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Opportunities",
@@ -40,7 +43,7 @@ export default async function OpportunitiesPage() {
       <section style={{ backgroundColor: "var(--yah-navy)" }}>
         <div className="container-yah py-16 md:py-20">
           <SectionHeading eyebrow="Grow With Us" title="Opportunities"
-            subtitle="From internships and funding to scholarships and volunteering — discover growth opportunities coordinated through YAH's partner network."
+            subtitle="From internships and funding to scholarships and volunteering â€” discover growth opportunities coordinated through YAH's partner network."
             color="light" decorativeBar accent="teal" />
         </div>
         <div style={{ lineHeight: 0 }} aria-hidden="true">
@@ -66,14 +69,14 @@ export default async function OpportunitiesPage() {
                     <h2 className="font-bold text-lg mb-2 leading-snug" style={{ fontFamily: "var(--font-heading)", color: "var(--yah-navy)" }}>{opp.title}</h2>
                     <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--yah-slate)" }}>{opp.tagline}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--yah-slate)" }}>
-                      <span>📍 {opp.location}</span>
-                      <span>🏢 {opp.provider}</span>
-                      {opp.deadline && <span>⏰ Deadline: {formatDate(opp.deadline, { day: "numeric", month: "short" })}</span>}
+                      <span className="inline-flex items-center gap-1"><LocationIcon size={14} /> {opp.location}</span>
+                      <span className="inline-flex items-center gap-1"><BuildingIcon size={14} /> {opp.provider}</span>
+                      {opp.deadline && <span className="inline-flex items-center gap-1"><ClockIcon size={14} /> Deadline: {formatDate(opp.deadline, { day: "numeric", month: "short" })}</span>}
                     </div>
                   </CardBody>
                   <CardFooter bordered className="flex items-center justify-between">
                     <span className="text-xs font-semibold" style={{ color: "var(--yah-slate)", fontFamily: "var(--font-heading)" }}>{opp.audience.split(" ").slice(0, 3).join(" ")}</span>
-                    <span className="text-xs font-semibold" style={{ color: "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>View Details →</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>View Details </span>
                   </CardFooter>
                 </Card>
               </Link>
