@@ -144,13 +144,13 @@ export async function getPrograms(): Promise<Program[]> {
 
     if (error) {
       console.error("[getData] getPrograms error:", error.message);
-      return fallbackPrograms;
+      return [];
     }
 
     return (data as ProgramRow[]).map(mapProgram);
   } catch (err) {
-    console.error("[getData] getPrograms failed to execute, falling back to static data:", err);
-    return fallbackPrograms;
+    console.error("[getData] getPrograms failed to execute:", err);
+    return [];
   }
 }
 
@@ -173,13 +173,13 @@ export async function getFeaturedPrograms(): Promise<Program[]> {
 
     if (error) {
       console.error("[getData] getFeaturedPrograms error:", error.message);
-      return fallbackPrograms.filter((p) => p.featured);
+      return [];
     }
 
     return (data as ProgramRow[]).map(mapProgram);
   } catch (err) {
-    console.error("[getData] getFeaturedPrograms failed to execute, falling back to static data:", err);
-    return fallbackPrograms.filter((p) => p.featured);
+    console.error("[getData] getFeaturedPrograms failed to execute:", err);
+    return [];
   }
 }
 
@@ -207,13 +207,13 @@ export async function getProgramBySlug(
     if (error) {
       if (error.code === "PGRST116") return undefined; // row not found
       console.error("[getData] getProgramBySlug error:", error.message);
-      return fallbackPrograms.find((p) => p.slug === slug);
+      return undefined;
     }
 
     return mapProgram(data as ProgramRow);
   } catch (err) {
-    console.error("[getData] getProgramBySlug failed to execute, falling back to static data:", err);
-    return fallbackPrograms.find((p) => p.slug === slug);
+    console.error("[getData] getProgramBySlug failed to execute:", err);
+    return undefined;
   }
 }
 
@@ -232,15 +232,15 @@ export async function getProgramSlugs(): Promise<string[]> {
 
     if (error) {
       console.error("[getData] getProgramSlugs error:", error.message);
-      return fallbackPrograms.map((p) => p.slug);
+      return [];
     }
 
     return data
       .map((row: { slug: string }) => row.slug)
       .filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0);
   } catch (err) {
-    console.error("[getData] getProgramSlugs failed to execute, falling back to static data:", err);
-    return fallbackPrograms.map((p) => p.slug);
+    console.error("[getData] getProgramSlugs failed to execute:", err);
+    return [];
   }
 }
 
@@ -263,13 +263,13 @@ export async function getOpportunities(): Promise<Opportunity[]> {
 
     if (error) {
       console.error("[getData] getOpportunities error:", error.message);
-      return fallbackOpportunities;
+      return [];
     }
 
     return (data as OpportunityRow[]).map(mapOpportunity);
   } catch (err) {
-    console.error("[getData] getOpportunities failed to execute, falling back to static data:", err);
-    return fallbackOpportunities;
+    console.error("[getData] getOpportunities failed to execute:", err);
+    return [];
   }
 }
 
@@ -292,13 +292,13 @@ export async function getFeaturedOpportunities(): Promise<Opportunity[]> {
 
     if (error) {
       console.error("[getData] getFeaturedOpportunities error:", error.message);
-      return fallbackOpportunities.filter((o) => o.featured);
+      return [];
     }
 
     return (data as OpportunityRow[]).map(mapOpportunity);
   } catch (err) {
-    console.error("[getData] getFeaturedOpportunities failed to execute, falling back to static data:", err);
-    return fallbackOpportunities.filter((o) => o.featured);
+    console.error("[getData] getFeaturedOpportunities failed to execute:", err);
+    return [];
   }
 }
 
@@ -326,13 +326,13 @@ export async function getOpportunityBySlug(
     if (error) {
       if (error.code === "PGRST116") return undefined;
       console.error("[getData] getOpportunityBySlug error:", error.message);
-      return fallbackOpportunities.find((o) => o.slug === slug);
+      return undefined;
     }
 
     return mapOpportunity(data as OpportunityRow);
   } catch (err) {
-    console.error("[getData] getOpportunityBySlug failed to execute, falling back to static data:", err);
-    return fallbackOpportunities.find((o) => o.slug === slug);
+    console.error("[getData] getOpportunityBySlug failed to execute:", err);
+    return undefined;
   }
 }
 
@@ -351,15 +351,15 @@ export async function getOpportunitySlugs(): Promise<string[]> {
 
     if (error) {
       console.error("[getData] getOpportunitySlugs error:", error.message);
-      return fallbackOpportunities.map((o) => o.slug);
+      return [];
     }
 
     return data
       .map((row: { slug: string }) => row.slug)
       .filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0);
   } catch (err) {
-    console.error("[getData] getOpportunitySlugs failed to execute, falling back to static data:", err);
-    return fallbackOpportunities.map((o) => o.slug);
+    console.error("[getData] getOpportunitySlugs failed to execute:", err);
+    return [];
   }
 }
 
@@ -382,13 +382,13 @@ export async function getPartners(): Promise<Partner[]> {
 
     if (error) {
       console.error("[getData] getPartners error:", error.message);
-      return fallbackPartners;
+      return [];
     }
 
     return (data as PartnerRow[]).map(mapPartner);
   } catch (err) {
-    console.error("[getData] getPartners failed to execute, falling back to static data:", err);
-    return fallbackPartners;
+    console.error("[getData] getPartners failed to execute:", err);
+    return [];
   }
 }
 
@@ -410,13 +410,13 @@ export async function getFeaturedPartners(): Promise<Partner[]> {
 
     if (error) {
       console.error("[getData] getFeaturedPartners error:", error.message);
-      return fallbackPartners.filter((p) => p.featured);
+      return [];
     }
 
     return (data as PartnerRow[]).map(mapPartner);
   } catch (err) {
-    console.error("[getData] getFeaturedPartners failed to execute, falling back to static data:", err);
-    return fallbackPartners.filter((p) => p.featured);
+    console.error("[getData] getFeaturedPartners failed to execute:", err);
+    return [];
   }
 }
 
@@ -444,12 +444,12 @@ export async function getPartnerBySlug(
     if (error) {
       if (error.code === "PGRST116") return undefined;
       console.error("[getData] getPartnerBySlug error:", error.message);
-      return fallbackPartners.find((p) => p.slug === slug);
+      return undefined;
     }
 
     return mapPartner(data as PartnerRow);
   } catch (err) {
-    console.error("[getData] getPartnerBySlug failed to execute, falling back to static data:", err);
-    return fallbackPartners.find((p) => p.slug === slug);
+    console.error("[getData] getPartnerBySlug failed to execute:", err);
+    return undefined;
   }
 }
