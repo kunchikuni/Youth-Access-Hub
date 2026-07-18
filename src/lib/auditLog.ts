@@ -12,7 +12,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type AuditAction = "create" | "update" | "delete" | "status_toggle";
-export type AuditEntity = "program" | "opportunity";
+export type AuditEntity = "program" | "opportunity" | "partner";
 
 interface LogAuditEntryParams {
   supabase: SupabaseClient;
