@@ -235,7 +235,9 @@ export async function getProgramSlugs(): Promise<string[]> {
       return fallbackPrograms.map((p) => p.slug);
     }
 
-    return data.map((row: { slug: string }) => row.slug);
+    return data
+      .map((row: { slug: string }) => row.slug)
+      .filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0);
   } catch (err) {
     console.error("[getData] getProgramSlugs failed to execute, falling back to static data:", err);
     return fallbackPrograms.map((p) => p.slug);
@@ -352,7 +354,9 @@ export async function getOpportunitySlugs(): Promise<string[]> {
       return fallbackOpportunities.map((o) => o.slug);
     }
 
-    return data.map((row: { slug: string }) => row.slug);
+    return data
+      .map((row: { slug: string }) => row.slug)
+      .filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0);
   } catch (err) {
     console.error("[getData] getOpportunitySlugs failed to execute, falling back to static data:", err);
     return fallbackOpportunities.map((o) => o.slug);
