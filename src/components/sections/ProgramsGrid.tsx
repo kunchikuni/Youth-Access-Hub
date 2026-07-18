@@ -158,7 +158,7 @@ export default function ProgramsGrid({ programs }: ProgramsGridProps) {
                       }}
                     >
                       <span>⏱ {program.duration}</span>
-                      <span>🎓 {program.audience.split(" ").slice(0, 3).join(" ")}</span>
+                      <span>🎓 {(program.audience || "Youth").split(" ").slice(0, 3).join(" ")}</span>
                     </div>
                   </CardBody>
 

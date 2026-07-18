@@ -66,7 +66,7 @@ export default async function ProgramsPage() {
                     <p className="text-sm leading-relaxed mb-4" style={{ color: program.featured ? "rgba(255,255,255,0.72)" : "var(--yah-slate)" }}>{program.tagline}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: program.featured ? "rgba(255,255,255,0.5)" : "var(--yah-slate)" }}>
                       <span className="inline-flex items-center gap-1"><ClockIcon size={14} /> {program.duration}</span>
-                      <span className="inline-flex items-center gap-1"><AudienceIcon size={14} /> {program.audience.split(" ").slice(0, 3).join(" ")}</span>
+                      <span className="inline-flex items-center gap-1"><AudienceIcon size={14} /> {(program.audience || "Youth").split(" ").slice(0, 3).join(" ")}</span>
                     </div>
                   </CardBody>
                   <CardFooter bordered className="flex items-center justify-between">
