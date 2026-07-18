@@ -65,13 +65,13 @@ export default function Card({
       className={cn(
         "rounded-[var(--radius-lg)] overflow-hidden",
         "transition-all duration-250",
-        interactive && [
-          "cursor-pointer",
+        interactive && "cursor-pointer",
+        interactive &&
           variant === "default" &&
-            "hover:shadow-[var(--shadow-hover)] hover:-translate-y-1",
+          "hover:shadow-[var(--shadow-hover)] hover:-translate-y-1",
+        interactive &&
           variant === "featured" &&
-            "hover:shadow-[0_12px_40px_rgba(27,47,107,0.35)] hover:-translate-y-1",
-        ],
+          "hover:shadow-[0_12px_40px_rgba(27,47,107,0.35)] hover:-translate-y-1",
         className
       )}
       style={{
@@ -124,19 +124,20 @@ export function CardFooter({
   children,
   className,
   bordered = true,
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
   bordered?: boolean;
+  style?: React.CSSProperties;
 }) {
   return (
     <div
       className={cn("px-6 pb-6 pt-4", className)}
-      style={
-        bordered
-          ? { borderTop: "1px solid var(--yah-light-gray)" }
-          : undefined
-      }
+      style={{
+        ...(bordered ? { borderTop: "1px solid var(--yah-light-gray)" } : {}),
+        ...style,
+      }}
     >
       {children}
     </div>

@@ -44,6 +44,7 @@ interface SectionHeadingProps {
   /** Max width constraint for the subtitle on centered layouts */
   subtitleMaxWidth?: string;
   className?: string;
+  id?: string;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ export default function SectionHeading({
   accent = "orange",
   subtitleMaxWidth = "600px",
   className,
+  id,
 }: SectionHeadingProps) {
   const isDark = color === "dark";
   const accentColor =
@@ -66,6 +68,7 @@ export default function SectionHeading({
 
   return (
     <div
+      id={id}
       className={cn(
         "flex flex-col",
         align === "center" ? "items-center text-center" : "items-start text-left",
