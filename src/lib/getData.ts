@@ -10,6 +10,9 @@ import { createClient } from "@/lib/supabase/server";
 import type { Program, Mentor } from "@/types/program";
 import type { Opportunity } from "@/types/opportunity";
 import type { Partner } from "@/types/partner";
+import { programs as fallbackPrograms } from "@/data/programs";
+import { opportunities as fallbackOpportunities } from "@/data/opportunities";
+import { partners as fallbackPartners } from "@/data/partners";
 
 // ─── Row shapes returned by Supabase ─────────────────────────────────────────
 // Supabase returns snake_case columns — we map to camelCase TypeScript types.
@@ -128,18 +131,27 @@ function mapPartner(row: PartnerRow): Partner {
  * Returns all programs.
  */
 export async function getPrograms(): Promise<Program[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("programs")
-      .select("*")
-      .order("created_at", { ascending: false });
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPrograms;
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("programs")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[getData] getPrograms error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getPrograms error:", error.message);
+      return fallbackPrograms;
+    }
+
+    return (data as ProgramRow[]).map(mapProgram);
+  } catch (err) {
+    console.error("[getData] getPrograms failed to execute, falling back to static data:", err);
+    return fallbackPrograms;
   }
-
-  return (data as ProgramRow[]).map(mapProgram);
 }
 
 /**
@@ -147,19 +159,28 @@ export async function getPrograms(): Promise<Program[]> {
  * Used on the homepage ProgramsGrid section.
  */
 export async function getFeaturedPrograms(): Promise<Program[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("programs")
-      .select("*")
-      .eq("featured", true)
-      .order("created_at", { ascending: false });
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPrograms.filter((p) => p.featured);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("programs")
+        .select("*")
+        .eq("featured", true)
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[getData] getFeaturedPrograms error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getFeaturedPrograms error:", error.message);
+      return fallbackPrograms.filter((p) => p.featured);
+    }
+
+    return (data as ProgramRow[]).map(mapProgram);
+  } catch (err) {
+    console.error("[getData] getFeaturedPrograms failed to execute, falling back to static data:", err);
+    return fallbackPrograms.filter((p) => p.featured);
   }
-
-  return (data as ProgramRow[]).map(mapProgram);
 }
 
 /**
@@ -171,20 +192,29 @@ export async function getFeaturedPrograms(): Promise<Program[]> {
 export async function getProgramBySlug(
     slug: string
 ): Promise<Program | undefined> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("programs")
-      .select("*")
-      .eq("slug", slug)
-      .single();
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPrograms.find((p) => p.slug === slug);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("programs")
+        .select("*")
+        .eq("slug", slug)
+        .single();
 
-  if (error) {
-    if (error.code === "PGRST116") return undefined; // row not found
-    console.error("[getData] getProgramBySlug error:", error.message);
-    return undefined;
+    if (error) {
+      if (error.code === "PGRST116") return undefined; // row not found
+      console.error("[getData] getProgramBySlug error:", error.message);
+      return fallbackPrograms.find((p) => p.slug === slug);
+    }
+
+    return mapProgram(data as ProgramRow);
+  } catch (err) {
+    console.error("[getData] getProgramBySlug failed to execute, falling back to static data:", err);
+    return fallbackPrograms.find((p) => p.slug === slug);
   }
-
-  return mapProgram(data as ProgramRow);
 }
 
 /**
@@ -192,15 +222,24 @@ export async function getProgramBySlug(
  * Used by Next.js generateStaticParams for /programs/[slug].
  */
 export async function getProgramSlugs(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("programs").select("slug");
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPrograms.map((p) => p.slug);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("programs").select("slug");
 
-  if (error) {
-    console.error("[getData] getProgramSlugs error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getProgramSlugs error:", error.message);
+      return fallbackPrograms.map((p) => p.slug);
+    }
+
+    return data.map((row: { slug: string }) => row.slug);
+  } catch (err) {
+    console.error("[getData] getProgramSlugs failed to execute, falling back to static data:", err);
+    return fallbackPrograms.map((p) => p.slug);
   }
-
-  return data.map((row: { slug: string }) => row.slug);
 }
 
 // ─── Opportunities ────────────────────────────────────────────────────────────
@@ -209,18 +248,27 @@ export async function getProgramSlugs(): Promise<string[]> {
  * Returns all opportunities.
  */
 export async function getOpportunities(): Promise<Opportunity[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("opportunities")
-      .select("*")
-      .order("created_at", { ascending: false });
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackOpportunities;
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("opportunities")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[getData] getOpportunities error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getOpportunities error:", error.message);
+      return fallbackOpportunities;
+    }
+
+    return (data as OpportunityRow[]).map(mapOpportunity);
+  } catch (err) {
+    console.error("[getData] getOpportunities failed to execute, falling back to static data:", err);
+    return fallbackOpportunities;
   }
-
-  return (data as OpportunityRow[]).map(mapOpportunity);
 }
 
 /**
@@ -228,19 +276,28 @@ export async function getOpportunities(): Promise<Opportunity[]> {
  * Used on the homepage OpportunitiesGrid section.
  */
 export async function getFeaturedOpportunities(): Promise<Opportunity[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("opportunities")
-      .select("*")
-      .eq("featured", true)
-      .order("created_at", { ascending: false });
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackOpportunities.filter((o) => o.featured);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("opportunities")
+        .select("*")
+        .eq("featured", true)
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[getData] getFeaturedOpportunities error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getFeaturedOpportunities error:", error.message);
+      return fallbackOpportunities.filter((o) => o.featured);
+    }
+
+    return (data as OpportunityRow[]).map(mapOpportunity);
+  } catch (err) {
+    console.error("[getData] getFeaturedOpportunities failed to execute, falling back to static data:", err);
+    return fallbackOpportunities.filter((o) => o.featured);
   }
-
-  return (data as OpportunityRow[]).map(mapOpportunity);
 }
 
 /**
@@ -252,20 +309,29 @@ export async function getFeaturedOpportunities(): Promise<Opportunity[]> {
 export async function getOpportunityBySlug(
     slug: string
 ): Promise<Opportunity | undefined> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("opportunities")
-      .select("*")
-      .eq("slug", slug)
-      .single();
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackOpportunities.find((o) => o.slug === slug);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("opportunities")
+        .select("*")
+        .eq("slug", slug)
+        .single();
 
-  if (error) {
-    if (error.code === "PGRST116") return undefined;
-    console.error("[getData] getOpportunityBySlug error:", error.message);
-    return undefined;
+    if (error) {
+      if (error.code === "PGRST116") return undefined;
+      console.error("[getData] getOpportunityBySlug error:", error.message);
+      return fallbackOpportunities.find((o) => o.slug === slug);
+    }
+
+    return mapOpportunity(data as OpportunityRow);
+  } catch (err) {
+    console.error("[getData] getOpportunityBySlug failed to execute, falling back to static data:", err);
+    return fallbackOpportunities.find((o) => o.slug === slug);
   }
-
-  return mapOpportunity(data as OpportunityRow);
 }
 
 /**
@@ -273,15 +339,24 @@ export async function getOpportunityBySlug(
  * Used by Next.js generateStaticParams for /opportunities/[slug].
  */
 export async function getOpportunitySlugs(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("opportunities").select("slug");
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackOpportunities.map((o) => o.slug);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("opportunities").select("slug");
 
-  if (error) {
-    console.error("[getData] getOpportunitySlugs error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getOpportunitySlugs error:", error.message);
+      return fallbackOpportunities.map((o) => o.slug);
+    }
+
+    return data.map((row: { slug: string }) => row.slug);
+  } catch (err) {
+    console.error("[getData] getOpportunitySlugs failed to execute, falling back to static data:", err);
+    return fallbackOpportunities.map((o) => o.slug);
   }
-
-  return data.map((row: { slug: string }) => row.slug);
 }
 
 // ─── Partners ─────────────────────────────────────────────────────────────────
@@ -290,37 +365,55 @@ export async function getOpportunitySlugs(): Promise<string[]> {
  * Returns all partners.
  */
 export async function getPartners(): Promise<Partner[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("partners")
-      .select("*")
-      .order("created_at", { ascending: false });
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPartners;
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("partners")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[getData] getPartners error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getPartners error:", error.message);
+      return fallbackPartners;
+    }
+
+    return (data as PartnerRow[]).map(mapPartner);
+  } catch (err) {
+    console.error("[getData] getPartners failed to execute, falling back to static data:", err);
+    return fallbackPartners;
   }
-
-  return (data as PartnerRow[]).map(mapPartner);
 }
 
 /**
  * Returns only partners marked as featured.
  */
 export async function getFeaturedPartners(): Promise<Partner[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("partners")
-      .select("*")
-      .eq("featured", true)
-      .order("created_at", { ascending: false });
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPartners.filter((p) => p.featured);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("partners")
+        .select("*")
+        .eq("featured", true)
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[getData] getFeaturedPartners error:", error.message);
-    return [];
+    if (error) {
+      console.error("[getData] getFeaturedPartners error:", error.message);
+      return fallbackPartners.filter((p) => p.featured);
+    }
+
+    return (data as PartnerRow[]).map(mapPartner);
+  } catch (err) {
+    console.error("[getData] getFeaturedPartners failed to execute, falling back to static data:", err);
+    return fallbackPartners.filter((p) => p.featured);
   }
-
-  return (data as PartnerRow[]).map(mapPartner);
 }
 
 /**
@@ -332,18 +425,27 @@ export async function getFeaturedPartners(): Promise<Partner[]> {
 export async function getPartnerBySlug(
     slug: string
 ): Promise<Partner | undefined> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("partners")
-      .select("*")
-      .eq("slug", slug)
-      .single();
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn("[getData] Supabase credentials missing. Falling back to static data.");
+      return fallbackPartners.find((p) => p.slug === slug);
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("partners")
+        .select("*")
+        .eq("slug", slug)
+        .single();
 
-  if (error) {
-    if (error.code === "PGRST116") return undefined;
-    console.error("[getData] getPartnerBySlug error:", error.message);
-    return undefined;
+    if (error) {
+      if (error.code === "PGRST116") return undefined;
+      console.error("[getData] getPartnerBySlug error:", error.message);
+      return fallbackPartners.find((p) => p.slug === slug);
+    }
+
+    return mapPartner(data as PartnerRow);
+  } catch (err) {
+    console.error("[getData] getPartnerBySlug failed to execute, falling back to static data:", err);
+    return fallbackPartners.find((p) => p.slug === slug);
   }
-
-  return mapPartner(data as PartnerRow);
 }
