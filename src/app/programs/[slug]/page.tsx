@@ -94,16 +94,16 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               <div>
                 <h2 className="font-bold text-xl mb-5" style={{ fontFamily: "var(--font-heading)", color: "var(--yah-navy)" }}>Your Mentor{program.mentors.length !== 1 ? "s" : ""}</h2>
                 <div className="flex flex-col gap-4">
-                  {program.mentors.map((mentor) => (
-                    <div key={mentor.name} className="flex items-start gap-4 p-5 rounded-xl"
+                  {program.mentors.map((mentor, idx) => (
+                    <div key={mentor.name || `mentor-${idx}`} className="flex items-start gap-4 p-5 rounded-xl"
                       style={{ backgroundColor: "var(--yah-off-white)", border: "1px solid var(--yah-light-gray)" }}>
                       <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-lg font-bold"
                         style={{ backgroundColor: "rgba(27,47,107,0.1)", color: "var(--yah-navy)", fontFamily: "var(--font-heading)" }}>
-                        {mentor.name.charAt(0)}
+                        {mentor.name ? mentor.name.charAt(0) : "?"}
                       </div>
                       <div>
-                        <p className="font-bold text-sm" style={{ fontFamily: "var(--font-heading)", color: "var(--yah-navy)" }}>{mentor.name}</p>
-                        <p className="text-xs mb-2" style={{ color: "var(--yah-teal)" }}>{mentor.title} Â· {mentor.organisation}</p>
+                        <p className="font-bold text-sm" style={{ fontFamily: "var(--font-heading)", color: "var(--yah-navy)" }}>{mentor.name || "TBA"}</p>
+                        <p className="text-xs mb-2" style={{ color: "var(--yah-teal)" }}>{mentor.title || "Mentor"} {mentor.organisation ? `· ${mentor.organisation}` : ""}</p>
                         <p className="text-sm leading-relaxed" style={{ color: "var(--yah-slate)" }}>{mentor.bio}</p>
                       </div>
                     </div>
