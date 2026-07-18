@@ -20,7 +20,7 @@
  */
 
 import type { Metadata } from "next";
-import { getFeaturedPrograms } from "@/lib/getData";
+import { getFeaturedPrograms, getOpportunities } from "@/lib/getData";
 import Hero from "@/components/sections/Hero";
 import StatsBar from "@/components/sections/StatsBar";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -38,13 +38,18 @@ export const metadata: Metadata = {
 // ─── Page Component ────────────────────────────────────────────────────────
 
 export default async function HomePage() {
-  // Fetch featured programs server-side — passed as props to section
-  const featuredPrograms = await getFeaturedPrograms();
+  // Fetch featured programs and opportunities server-side in parallel
+  const [featuredPrograms, opportunities] = await Promise.all([
+    getFeaturedPrograms(),
+    getOpportunities(),
+  ]);
+
+  const activeOpportunitiesCount = opportunities.filter((o) => o.status === "open").length;
 
   return (
     <>
       <Hero />
-      <StatsBar />
+      <StatsBar activeOpportunitiesCount={activeOpportunitiesCount} />
       <HowItWorks />
       <ProgramsGrid programs={featuredPrograms} />
       <CTABanner />

@@ -12,38 +12,37 @@
  * @module components/sections/StatsBar
  */
 
-// ─── Stats Config ──────────────────────────────────────────────────────────
+interface StatsBarProps {
+  activeOpportunitiesCount: number;
+}
 
-const STATS = [
-  {
-    value: "500+",
-    label: "Youth Connected",
-    color: "var(--yah-navy)",
-    accent: "var(--yah-orange)",
-  },
-  {
-    value: "3",
-    label: "Mentorship Programs",
-    color: "var(--yah-navy)",
-    accent: "var(--yah-teal)",
-  },
-  {
-    value: "6+",
-    label: "Partner Organisations",
-    color: "var(--yah-navy)",
-    accent: "var(--yah-sky)",
-  },
-  {
-    value: "4",
-    label: "Active Opportunities",
-    color: "var(--yah-navy)",
-    accent: "var(--yah-orange)",
-  },
-] as const;
-
-// ─── Component ─────────────────────────────────────────────────────────────
-
-export default function StatsBar() {
+export default function StatsBar({ activeOpportunitiesCount }: StatsBarProps) {
+  const stats = [
+    {
+      value: "20+",
+      label: "Youth Connected",
+      color: "var(--yah-navy)",
+      accent: "var(--yah-orange)",
+    },
+    {
+      value: "3",
+      label: "Mentorship Programs",
+      color: "var(--yah-navy)",
+      accent: "var(--yah-teal)",
+    },
+    {
+      value: "2",
+      label: "Partner Organisations",
+      color: "var(--yah-navy)",
+      accent: "var(--yah-sky)",
+    },
+    {
+      value: String(activeOpportunitiesCount),
+      label: "Active Opportunities",
+      color: "var(--yah-navy)",
+      accent: "var(--yah-orange)",
+    },
+  ];
   return (
     <section
       style={{ backgroundColor: "var(--yah-off-white)" }}
@@ -51,13 +50,13 @@ export default function StatsBar() {
     >
       <div className="container-yah py-10 md:py-14">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-          {STATS.map(({ value, label, accent }, index) => (
+          {stats.map(({ value, label, accent }, index) => (
             <div
               key={label}
               className="flex flex-col items-center text-center gap-1 relative"
             >
               {/* Vertical divider — between items, not after last */}
-              {index < STATS.length - 1 && (
+              {index < stats.length - 1 && (
                 <div
                   className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 h-10 w-px"
                   style={{ backgroundColor: "var(--yah-light-gray)" }}
